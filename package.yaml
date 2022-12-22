@@ -1,0 +1,59 @@
+name:                another-proof-assistant
+version:             0.1.0.0
+github:              "kendfrey/another-proof-assistant"
+license:             MIT
+author:              "Kendall Frey"
+maintainer:          "kendfrey@gmail.com"
+copyright:           "2022 Kendall Frey"
+
+extra-source-files:
+- README.md
+
+# Metadata used when publishing your package
+# synopsis:            Short description of your package
+# category:            Web
+
+# To avoid duplicated efforts in documentation and dealing with the
+# complications of embedding Haddock markup inside cabal files, it is
+# common to point users to the README.md file.
+description:         Please see the README on GitHub at <https://github.com/kendfrey/another-proof-assistant#readme>
+
+dependencies:
+- base >= 4.7 && < 5
+
+ghc-options:
+- -Wall
+- -Wcompat
+- -Widentities
+- -Wincomplete-record-updates
+- -Wincomplete-uni-patterns
+- -Wmissing-export-lists
+- -Wmissing-home-modules
+- -Wpartial-fields
+- -Wredundant-constraints
+- -Werror
+
+library:
+  source-dirs: src
+
+executables:
+  another-proof-assistant-exe:
+    main:                Main.hs
+    source-dirs:         app
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - another-proof-assistant
+
+tests:
+  another-proof-assistant-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+    - -threaded
+    - -rtsopts
+    - -with-rtsopts=-N
+    dependencies:
+    - another-proof-assistant
