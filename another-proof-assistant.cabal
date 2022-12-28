@@ -24,7 +24,15 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Context
+      Def
+      Elaborate
+      Error
+      Quote
+      Reduce
+      Syntax
+      Unify
+      VarNames
   other-modules:
       Paths_another_proof_assistant
   hs-source-dirs:
@@ -32,6 +40,8 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Werror
   build-depends:
       base >=4.7 && <5
+    , containers
+    , transformers
   default-language: Haskell2010
 
 executable another-proof-assistant-exe
@@ -44,6 +54,8 @@ executable another-proof-assistant-exe
   build-depends:
       another-proof-assistant
     , base >=4.7 && <5
+    , containers
+    , transformers
   default-language: Haskell2010
 
 test-suite another-proof-assistant-test
@@ -57,4 +69,6 @@ test-suite another-proof-assistant-test
   build-depends:
       another-proof-assistant
     , base >=4.7 && <5
+    , containers
+    , transformers
   default-language: Haskell2010
