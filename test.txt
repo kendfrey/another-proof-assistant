@@ -1,0 +1,6 @@
+id : (u : Level) -> (a : Type u) -> a -> a :=
+	_ => _ => x => x;
+const : (u : Level) -> (a : Type u) -> a -> a -> a :=
+	_ => _ => x => _ => x;
+quoteClosureTest : (u : Level) -> (a : Type u) -> (x : a) -> (b : (a -> a) -> Type u) -> b (const u a x) :=
+	u => a => test => b => ?;

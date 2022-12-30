@@ -28,6 +28,7 @@ library
       Def
       Elaborate
       Error
+      Parser
       Quote
       Reduce
       Syntax
@@ -41,6 +42,8 @@ library
   build-depends:
       base >=4.7 && <5
     , containers
+    , megaparsec
+    , text
     , transformers
   default-language: Haskell2010
 
@@ -55,6 +58,8 @@ executable another-proof-assistant-exe
       another-proof-assistant
     , base >=4.7 && <5
     , containers
+    , megaparsec
+    , text
     , transformers
   default-language: Haskell2010
 
@@ -70,5 +75,7 @@ test-suite another-proof-assistant-test
       another-proof-assistant
     , base >=4.7 && <5
     , containers
+    , megaparsec
+    , text
     , transformers
   default-language: Haskell2010
