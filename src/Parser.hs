@@ -6,6 +6,7 @@ import Context
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.State
 import Data.Functor
+import Data.Maybe
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text.IO as T
 import Data.Void
@@ -24,19 +25,21 @@ parseFile file = parse defs file <$> T.readFile file
 
 defs :: Parser (StateT Ctx (AccumT [Goal] Error) ())
 defs = do
+  skipSpace
   d <- many def
   eof
   return $ foldl (>>) (return ()) d
 
 def :: Parser (StateT Ctx (AccumT [Goal] Error) ())
 def = do
+  o <- isJust <$> optional (symbol "#")
   s <- identifier
   symbol ":"
   a <- expr
   symbol ":="
   x <- expr
   symbol ";"
-  return $ addDef s a x
+  return $ addDef o s a x
 
 expr :: Parser Expr
 expr = label "expression" $ try ePi <|> try eLam <|> try appChunk
@@ -88,10 +91,10 @@ identifier :: Parser String
 identifier = label "identifier" $ unpack <$> (lexeme $ pack <$> ((:) <$> identifierStartChar <*> many identifierChar))
 
 identifierStartChar :: Parser Char
-identifierStartChar = letterChar <|> char '_'
+identifierStartChar = letterChar <|> char '_' <|> char '.'
 
 identifierChar :: Parser Char
-identifierChar = alphaNumChar <|> char '_'
+identifierChar = alphaNumChar <|> char '_' <|> char '.'
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme skipSpace

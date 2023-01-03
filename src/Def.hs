@@ -25,16 +25,18 @@ defaultCtx = []
     (VPi VLevel ("u", TType (TLSucc (TVar "u" 0)), []))
     (VLam ("u", TType (TVar "u" 0), []))
 
-addDef :: String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
-addDef s a x = do
+addDef :: Bool -> String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
+addDef o s a x = do
   c <- get
-  d <- lift $ checkDef c
-  put (c |- d)
-    where
-    checkDef :: Ctx -> AccumT [Goal] Error Def
-    checkDef c = do
-      (a', _) <- elaborateType c a
-      let a'' = reduce (env c) a'
-      x' <- elaborate c a'' x
-      let x'' = reduce (env c) x'
-      return $ Def False s a'' x''
+  (a', _) <- lift $ elaborateType c a
+  let a'' = reduce (env c) a'
+  x' <- lift $ elaborate c a'' x
+  let x'' = reduce (env c) x'
+  if o then do
+    let s' = newVar c s
+    let c' = (c |- Def False s a'' s')
+    -- TODO this needs to be an equality
+    let lemma = VPi VLevel ("__u", TPi "P" (TPi "_" (TVar "#" 3) (TType (TVar "__u" 1))) (TPi "_" (TApp (TVar "P" 0) (TVar "#" 3)) (TApp (TVar "P" 1) (TVar "#" 3))), [s', x'', a''])
+    put (c' |- Def False (s ++ ".def") lemma (newVar c' (s ++ ".def")))
+  else
+    put (c |- Def False s a'' x'')

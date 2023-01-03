@@ -1,6 +1,21 @@
-id : (u : Level) -> (a : Type u) -> a -> a :=
-	_ => _ => x => x;
 const : (u : Level) -> (a : Type u) -> a -> a -> a :=
 	_ => _ => x => _ => x;
+
 quoteClosureTest : (u : Level) -> (a : Type u) -> (x : a) -> (b : (a -> a) -> Type u) -> b (const u a x) :=
 	u => a => test => b => ?;
+
+#Id : (u : Level) -> (a : Type u) -> Type u :=
+  u => a => a;
+#Id.mk : (u : Level) -> (a : Type u) -> (x : a) -> Id u a :=
+  u => a => Id.def u (i => a -> i u a) (x => x);
+#Id.out : (u : Level) -> (a : Type u) -> (x : Id u a) -> a :=
+  u => a => Id.def u (i => i u a -> a) (x => x);
+Id.outMk : (u : Level) -> (v : Level) -> (a : Type u) -> (x : a) -> (P : a -> Type v) -> P (Id.out u a (Id.mk u a x)) -> P x :=
+  u => v => a => x => P =>
+    Id.mk.def v (m => P (Id.out u a (m u a x)) -> P x)
+    (
+      Id.out.def v (o => P (o u a (Id.def u (i => a -> i u a) (x => x) x)) -> P x)
+      (
+        ?
+      )
+    );
