@@ -7,7 +7,7 @@ import Control.Monad.Trans.Accum
 import Control.Monad.Trans.State
 import Data.Functor
 import Data.Maybe
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text)
 import qualified Data.Text.IO as T
 import Data.Void
 import Def
@@ -88,13 +88,10 @@ parens :: Parser a -> Parser a
 parens = between (symbol "(") (symbol ")")
 
 identifier :: Parser String
-identifier = label "identifier" $ unpack <$> (lexeme $ pack <$> ((:) <$> identifierStartChar <*> many identifierChar))
-
-identifierStartChar :: Parser Char
-identifierStartChar = letterChar <|> char '_' <|> char '.' <|> char '\''
+identifier = lexeme . label "identifier" $ some identifierChar
 
 identifierChar :: Parser Char
-identifierChar = alphaNumChar <|> char '_' <|> char '.' <|> char '\''
+identifierChar = alphaNumChar <|> oneOf ['_', '.', '\'']
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme skipSpace
