@@ -91,10 +91,10 @@ identifier :: Parser String
 identifier = label "identifier" $ unpack <$> (lexeme $ pack <$> ((:) <$> identifierStartChar <*> many identifierChar))
 
 identifierStartChar :: Parser Char
-identifierStartChar = letterChar <|> char '_' <|> char '.'
+identifierStartChar = letterChar <|> char '_' <|> char '.' <|> char '\''
 
 identifierChar :: Parser Char
-identifierChar = alphaNumChar <|> char '_' <|> char '.'
+identifierChar = alphaNumChar <|> char '_' <|> char '.' <|> char '\''
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme skipSpace

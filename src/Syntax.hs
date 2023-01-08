@@ -59,6 +59,10 @@ data Term
   | TPi String Term Term
   | TLam String Term
   | TApp Term Term
+  | TEq Term Term Term Term
+  | TRefl Term Term Term
+  | TEqElim Term Term Term Term Term Term Term Term
+  deriving (Show)
 
 type Env = [Value]
 
@@ -73,8 +77,11 @@ data Value
   | VTypeOmega Int
   | VPi Value Closure
   | VLam Closure
+  | VEq Value Value Value Value
+  | VRefl Value Value Value
 
 data Stuck
   = SVar String Int
   | SMVar Int
   | SApp Stuck Value
+  | SEqElim Value Value Value Value Value Value Value Stuck

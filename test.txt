@@ -1,21 +1,19 @@
-const : (u : Level) -> (a : Type u) -> a -> a -> a :=
+const : (u : Level) -> (A : Type u) -> A -> A -> A :=
 	_ => _ => x => _ => x;
 
-quoteClosureTest : (u : Level) -> (a : Type u) -> (x : a) -> (b : (a -> a) -> Type u) -> b (const u a x) :=
-	u => a => test => b => ?;
+quoteClosureTest : (u : Level) -> (A : Type u) -> (x : A) -> (b : (A -> A) -> Type u) -> b (const u A x) :=
+	u => A => test => b => ?;
 
-#Id : (u : Level) -> (a : Type u) -> Type u :=
-  u => a => a;
-#Id.mk : (u : Level) -> (a : Type u) -> (x : a) -> Id u a :=
-  u => a => Id.def u (i => a -> i u a) (x => x);
-#Id.out : (u : Level) -> (a : Type u) -> (x : Id u a) -> a :=
-  u => a => Id.def u (i => i u a -> a) (x => x);
-Id.outMk : (u : Level) -> (v : Level) -> (a : Type u) -> (x : a) -> (P : a -> Type v) -> P (Id.out u a (Id.mk u a x)) -> P x :=
-  u => v => a => x => P =>
-    Id.mk.def v (m => P (Id.out u a (m u a x)) -> P x)
-    (
-      Id.out.def v (o => P (o u a (Id.def u (i => a -> i u a) (x => x) x)) -> P x)
-      (
-        ?
-      )
-    );
+#Id : (u : Level) -> Type u -> Type u :=
+  u => A => A;
+#Id.mk : (u : Level) -> (A : Type u) -> A -> Id u A :=
+  u => A => x => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x (Id u) (Id.eq u);
+#Id.out : (u : Level) -> (A : Type u) -> Id u A -> A :=
+  u => A => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u);
+Id.outMk : (u : Level) -> (A : Type u) -> (x : A) -> Eq u A x (Id.out u A (Id.mk u A x)) :=
+  u => A => x =>
+    Eq.elim (lSucc u) u ((A : Type u) -> Id u A -> A) (A => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u)) (o => h => Eq u A x (o A (Id.mk u A x)))
+      (Eq.elim (lSucc u) u ((A : Type u) -> A -> Id u A) (A => x => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x (Id u) (Id.eq u)) (m => h => Eq u A x (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u) (m A x)))
+        (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => Eq u A x (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) i h (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x i h))) (refl u A x) (Id u) (Id.eq u))
+      (Id.mk u) (Id.mk.eq u))
+    (Id.out u) (Id.out.eq u);
