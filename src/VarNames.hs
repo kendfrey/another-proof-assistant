@@ -4,7 +4,10 @@ module VarNames (
   vLevel,
   vLMax,
   vLSucc,
+  vPair,
   vRefl,
+  vSigma,
+  vSigmaElim,
   vType
   ) where
 
@@ -23,8 +26,17 @@ vLMax = "lMax"
 vLSucc :: String
 vLSucc = "lSucc"
 
+vPair :: String
+vPair = "pair"
+
 vRefl :: String
 vRefl = "refl"
+
+vSigma :: String
+vSigma = "Sigma"
+
+vSigmaElim :: String
+vSigmaElim = "Sigma.elim"
 
 vType :: String
 vType = "Type"

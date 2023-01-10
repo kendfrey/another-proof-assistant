@@ -1,8 +1,8 @@
 const : (u : Level) -> (A : Type u) -> A -> A -> A :=
 	_ => _ => x => _ => x;
 
-quoteClosureTest : (u : Level) -> (A : Type u) -> (x : A) -> (b : (A -> A) -> Type u) -> b (const u A x) :=
-	u => A => test => b => ?;
+quoteClosureTest : (u : Level) -> (A : Type u) -> (x : A) -> (P : (A -> A) -> Type u) -> P (const u A x) :=
+	u => A => test => P => ?;
 
 #Id : (u : Level) -> Type u -> Type u :=
   u => A => A;
@@ -17,3 +17,10 @@ Id.outMk : (u : Level) -> (A : Type u) -> (x : A) -> Eq u A x (Id.out u A (Id.mk
         (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => Eq u A x (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) i h (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x i h))) (refl u A x) (Id u) (Id.eq u))
       (Id.mk u) (Id.mk.eq u))
     (Id.out u) (Id.out.eq u);
+
+fst : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> Sigma u v A B -> A :=
+  u => v => A => B => Sigma.elim u v u A B (_ => A) (x => _ => x);
+snd : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Sigma u v A B) -> B (fst u v A B x) :=
+  u => v => A => B => Sigma.elim u v v A B (x => B (fst u v A B x)) (_ => y => y);
+Sigma.eta : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Sigma u v A B) -> Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x)) :=
+  u => v => A => B => Sigma.elim u v (lMax u v) A B (x => Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x))) (x => y => refl (lMax u v) (Sigma u v A B) (pair u v A B x y));

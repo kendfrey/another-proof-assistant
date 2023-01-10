@@ -24,6 +24,15 @@ defaultCtx = []
   |- Def False vType
     (VPi VLevel ("u", TType (TLSucc (TVar "u" 0)), []))
     (VLam ("u", TType (TVar "u" 0), []))
+  |- Def False vSigma
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "A" (TType (TVar "u" 1)) (TPi "_" (TPi "_" (TVar "A" 0) (TType (TVar "v" 2))) (TType (TLMax (TVar "u" 3) (TVar "v" 2))))), []))
+    (VLam ("u", TLam "v" (TLam "A" (TLam "B" (TSigma (TVar "u" 3) (TVar "v" 2) (TVar "A" 1) (TVar "B" 0)))), []))
+  |- Def False vPair
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "A" (TType (TVar "u" 1)) (TPi "B" (TPi "_" (TVar "A" 0) (TType (TVar "v" 2))) (TPi "x" (TVar "A" 1) (TPi "_" (TApp (TVar "B" 1) (TVar "x" 0)) (TSigma (TVar "u" 5) (TVar "v" 4) (TVar "A" 3) (TVar "B" 2)))))), []))
+    (VLam ("u", TLam "v" (TLam "A" (TLam "B" (TLam "x" (TLam "y" (TPair (TVar "u" 5) (TVar "v" 4) (TVar "A" 3) (TVar "B" 2) (TVar "x" 1) (TVar "y" 0)))))), []))
+  |- Def False vSigmaElim
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "w" TLevel (TPi "A" (TType (TVar "u" 2)) (TPi "B" (TPi "_" (TVar "A" 0) (TType (TVar "v" 3))) (TPi "P" (TPi "_" (TSigma (TVar "u" 4) (TVar "v" 3) (TVar "A" 1) (TVar "B" 0)) (TType (TVar "w" 3))) (TPi "_" (TPi "x" (TVar "A" 2) (TPi "y" (TApp (TVar "B" 2) (TVar "x" 0)) (TApp (TVar "P" 2) (TPair (TVar "u" 7) (TVar "v" 6) (TVar "A" 4) (TVar "B" 3) (TVar "x" 1) (TVar "y" 0))))) (TPi "x" (TSigma (TVar "u" 6) (TVar "v" 5) (TVar "A" 3) (TVar "B" 2)) (TApp (TVar "P" 2) (TVar "x" 0)))))))), []))
+    (VLam ("u", (TLam "v" (TLam "w" (TLam "A" (TLam "B" (TLam "P" (TLam "ih" (TLam "x" (TSigmaElim (TVar "u" 7) (TVar "v" 6) (TVar "w" 5) (TVar "A" 4) (TVar "B" 3) (TVar "P" 2) (TVar "ih" 1) (TVar "x" 0))))))))), []))
   |- Def False vEq
     (VPi VLevel ("u", TPi "A" (TType (TVar "u" 0)) (TPi "_" (TVar "A" 0) (TPi "_" (TVar "A" 1) (TType (TVar "u" 3)))), []))
     (VLam ("u", TLam "A" (TLam "x" (TLam "y" (TEq (TVar "u" 3) (TVar "A" 2) (TVar "x" 1) (TVar "y" 0)))), []))

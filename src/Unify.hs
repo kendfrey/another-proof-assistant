@@ -25,6 +25,18 @@ unify _c _x _y = trace ("\nUnifying " ++ showValue _x ++ " and " ++ showValue _y
     unify c (reduce (newVar c s : e) b) (reduce (newVar c s' : e') b')
   unify' c x@(VLam _) y = unifyFun c x y
   unify' c x y@(VLam _) = unifyFun c x y
+  unify' c (VSigma u v a b) (VSigma u' v' a' b') = do
+    unify c u u'
+    unify c v v'
+    unify c a a'
+    unify c b b'
+  unify' c (VPair u v a b x y) (VPair u' v' a' b' x' y') = do
+    unify c u u'
+    unify c v v'
+    unify c a a'
+    unify c b b'
+    unify c x x'
+    unify c y y'
   unify' c (VEq u a x y) (VEq u' a' x' y') = do
     unify c u u'
     unify c a a'
@@ -43,6 +55,15 @@ unifyStuck _c _x _y = trace ("\nUnifying " ++ showStuck _x ++ " and " ++ showStu
   unifyStuck' c (SApp f x) (SApp g y) = do
     unifyStuck c f g
     unify c x y
+  unifyStuck' c (SSigmaElim u v w a b p ih x) (SSigmaElim u' v' w' a' b' p' ih' x') = do
+    unify c u u'
+    unify c v v'
+    unify c w w'
+    unify c a a'
+    unify c b b'
+    unify c p p'
+    unify c ih ih'
+    unifyStuck c x x'
   unifyStuck' c (SEqElim u v a x p ih y _) (SEqElim u' v' a' x' p' ih' y' _) = do
     unify c u u'
     unify c v v'

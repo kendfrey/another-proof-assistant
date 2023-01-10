@@ -59,6 +59,9 @@ data Term
   | TPi String Term Term
   | TLam String Term
   | TApp Term Term
+  | TSigma Term Term Term Term
+  | TPair Term Term Term Term Term Term
+  | TSigmaElim Term Term Term Term Term Term Term Term
   | TEq Term Term Term Term
   | TRefl Term Term Term
   | TEqElim Term Term Term Term Term Term Term Term
@@ -77,6 +80,8 @@ data Value
   | VTypeOmega Int
   | VPi Value Closure
   | VLam Closure
+  | VSigma Value Value Value Value
+  | VPair Value Value Value Value Value Value
   | VEq Value Value Value Value
   | VRefl Value Value Value
 
@@ -84,4 +89,5 @@ data Stuck
   = SVar String Int
   | SMVar Int
   | SApp Stuck Value
+  | SSigmaElim Value Value Value Value Value Value Value Stuck
   | SEqElim Value Value Value Value Value Value Value Stuck
