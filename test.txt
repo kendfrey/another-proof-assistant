@@ -1,3 +1,6 @@
+K : (u : Level) -> (A : Type u) -> (x : A) -> (h : Eq u A x x) -> Eq u (Eq u A x x) (refl u A x) h :=
+  u => A => x => h => refl u (Eq u A x x) h;
+
 const : (u : Level) -> (A : Type u) -> A -> A -> A :=
 	_ => _ => x => _ => x;
 
