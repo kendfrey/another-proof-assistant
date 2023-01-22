@@ -19,6 +19,14 @@ reduce e (TSigmaElim u v w a b p ih x) = reduceSigmaElim (reduce e u) (reduce e 
 reduce e (TEq u a x y) = VEq (reduce e u) (reduce e a) (reduce e x) (reduce e y)
 reduce e (TRefl u a x) = VRefl (reduce e u) (reduce e a) (reduce e x)
 reduce e (TEqElim u v a x p ih y h) = reduceEqElim (reduce e u) (reduce e v) (reduce e a) (reduce e x) (reduce e p) (reduce e ih) (reduce e y) (reduce e h)
+reduce e (TEmpty u) = VEmpty (reduce e u)
+reduce e (TEmptyElim u v p x) = reduceEmptyElim (reduce e u) (reduce e v) (reduce e p) (reduce e x)
+reduce e (TUnit u) = VUnit (reduce e u)
+reduce e (TStar u) = VStar (reduce e u)
+reduce e (TBool u) = VBool (reduce e u)
+reduce e (TTrue u) = VTrue (reduce e u)
+reduce e (TFalse u) = VFalse (reduce e u)
+reduce e (TBoolElim u v p ht hf x) = reduceBoolElim (reduce e u) (reduce e v) (reduce e p) (reduce e ht) (reduce e hf) (reduce e x)
 
 reduceApp :: Value -> Value -> Value
 reduceApp (VLam (_, f, e)) x = reduce (x : e) f
@@ -34,3 +42,13 @@ reduceEqElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> V
 reduceEqElim _ _ _ _ _ ih _ (VRefl _ _ _) = ih
 reduceEqElim u v a x p ih y (VStuck h) = VStuck (SEqElim u v a x p ih y h)
 reduceEqElim _ _ _ _ _ _ _ _ = error "reduceEqElim"
+
+reduceEmptyElim :: Value -> Value -> Value -> Value -> Value
+reduceEmptyElim u v p (VStuck x) = VStuck (SEmptyElim u v p x)
+reduceEmptyElim _ _ _ _ = error "reduceEmptyElim"
+
+reduceBoolElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value
+reduceBoolElim _ _ _ ht _ (VTrue _) = ht
+reduceBoolElim _ _ _ _ hf (VFalse _) = hf
+reduceBoolElim u v p ht hf (VStuck x) = VStuck (SBoolElim u v p ht hf x)
+reduceBoolElim _ _ _ _ _ _ = error "reduceBoolElim"

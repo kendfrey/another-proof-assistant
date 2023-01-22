@@ -65,6 +65,14 @@ data Term
   | TEq Term Term Term Term
   | TRefl Term Term Term
   | TEqElim Term Term Term Term Term Term Term Term
+  | TEmpty Term
+  | TEmptyElim Term Term Term Term
+  | TUnit Term
+  | TStar Term
+  | TBool Term
+  | TTrue Term
+  | TFalse Term
+  | TBoolElim Term Term Term Term Term Term
   deriving (Show)
 
 type Env = [Value]
@@ -84,6 +92,12 @@ data Value
   | VPair Value Value Value Value Value Value
   | VEq Value Value Value Value
   | VRefl Value Value Value
+  | VEmpty Value
+  | VUnit Value
+  | VStar Value
+  | VBool Value
+  | VTrue Value
+  | VFalse Value
 
 data Stuck
   = SVar String Int
@@ -91,3 +105,5 @@ data Stuck
   | SApp Stuck Value
   | SSigmaElim Value Value Value Value Value Value Value Stuck
   | SEqElim Value Value Value Value Value Value Value Stuck
+  | SEmptyElim Value Value Value Stuck
+  | SBoolElim Value Value Value Value Value Stuck

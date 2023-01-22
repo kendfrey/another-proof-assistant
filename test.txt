@@ -27,3 +27,12 @@ snd : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Si
   u => v => A => B => Sigma.elim u v v A B (x => B (fst u v A B x)) (_ => y => y);
 Sigma.eta : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Sigma u v A B) -> Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x)) :=
   u => v => A => B => Sigma.elim u v (lMax u v) A B (x => Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x))) (x => y => refl (lMax u v) (Sigma u v A B) (pair u v A B x y));
+
+absurd : (u : Level) -> (v : Level) -> (A : Type v) -> Empty u -> A :=
+  u => v => A => Empty.elim u v (_ => A);
+
+Unit.IsProp : (u : Level) -> (x : Unit u) -> (y : Unit u) -> Eq u (Unit u) x y :=
+  u => x => y => refl u (Unit u) (star u);
+
+trueNeFalse : (u : Level) -> (v : Level) -> Eq u (Bool u) (true u) (false u) -> Empty v :=
+  u => v => Eq.elim u v (Bool u) (true u) (b => _ => Bool.elim u (lSucc v) (_ => Type v) (Unit v) (Empty v) b) (star v) (false u);

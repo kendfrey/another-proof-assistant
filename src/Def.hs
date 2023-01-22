@@ -42,6 +42,33 @@ defaultCtx = []
   |- Def False vEqElim
     (VPi VLevel ("u", TPi "v" TLevel (TPi "A" (TType (TVar "u" 1)) (TPi "x" (TVar "A" 0) (TPi "P" (TPi "y" (TVar "A" 1) (TPi "_" (TEq (TVar "u" 4) (TVar "a" 2) (TVar "x" 1) (TVar "y" 0)) (TType (TVar "v" 4)))) (TPi "_" (TApp (TApp (TVar "P" 0) (TVar "x" 1)) (TRefl (TVar "u" 4) (TVar "A" 2) (TVar "x" 1))) (TPi "y" (TVar "A" 3) (TPi "h" (TEq (TVar "u" 6) (TVar "A" 4) (TVar "x" 3) (TVar "y" 0)) (TApp (TApp (TVar "P" 3) (TVar "y" 1)) (TVar "h" 0)))))))), []))
     (VLam ("u", TLam "v" (TLam "A" (TLam "x" (TLam "P" (TLam "ih" (TLam "y" (TLam "h" (TEqElim (TVar "u" 7) (TVar "v" 6) (TVar "A" 5) (TVar "x" 4) (TVar "P" 3) (TVar "ih" 2) (TVar "y" 1) (TVar "h" 0)))))))), []))
+  |- Def False vEmpty
+    (VPi VLevel ("u", TType (TVar "u" 0), []))
+    (VLam ("u", TEmpty (TVar "u" 0), []))
+  |- Def False vEmptyElim
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "P" (TPi "_" (TEmpty (TVar "u" 1)) (TType (TVar "v" 1))) (TPi "x" (TEmpty (TVar "u" 2)) (TApp (TVar "P" 1) (TVar "x" 0)))), []))
+    (VLam ("u", TLam "v" (TLam "P" (TLam "x" (TEmptyElim (TVar "u" 3) (TVar "v" 2) (TVar "P" 1) (TVar "x" 0)))), []))
+  |- Def False vUnit
+    (VPi VLevel ("u", TType (TVar "u" 0), []))
+    (VLam ("u", TUnit (TVar "u" 0), []))
+  |- Def False vStar
+    (VPi VLevel ("u", TUnit (TVar "u" 0), []))
+    (VLam ("u", TStar (TVar "u" 0), []))
+  |- Def False vUnitElim
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "P" (TPi "_" (TUnit (TVar "u" 1)) (TType (TVar "v" 1))) (TPi "_" (TApp (TVar "P" 0) (TStar (TVar "u" 2))) (TPi "x" (TUnit (TVar "u" 3)) (TApp (TVar "P" 2) (TVar "x" 0))))), []))
+    (VLam ("u", TLam "v" (TLam "P" (TLam "ih" (TLam "x" (TVar "ih" 1)))), []))
+  |- Def False vBool
+    (VPi VLevel ("u", TType (TVar "u" 0), []))
+    (VLam ("u", TBool (TVar "u" 0), []))
+  |- Def False vTrue
+    (VPi VLevel ("u", TBool (TVar "u" 0), []))
+    (VLam ("u", TTrue (TVar "u" 0), []))
+  |- Def False vFalse
+    (VPi VLevel ("u", TBool (TVar "u" 0), []))
+    (VLam ("u", TFalse (TVar "u" 0), []))
+  |- Def False vBoolElim
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "P" (TPi "_" (TBool (TVar "u" 1)) (TType (TVar "v" 1))) (TPi "_" (TApp (TVar "P" 0) (TTrue (TVar "u" 2))) (TPi "_" (TApp (TVar "P" 1) (TFalse (TVar "u" 3))) (TPi "x" (TBool (TVar "u" 4)) (TApp (TVar "P" 3) (TVar "x" 0)))))), []))
+    (VLam ("u", TLam "v" (TLam "P" (TLam "ht" (TLam "hf" (TLam "x" (TBoolElim (TVar "u" 5) (TVar "v" 4) (TVar "P" 3) (TVar "ht" 2) (TVar "hf" 1) (TVar "x" 0)))))), []))
 
 addDef :: Bool -> String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
 addDef o s a x = do

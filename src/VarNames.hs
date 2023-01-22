@@ -1,6 +1,11 @@
 module VarNames (
+  vBool,
+  vBoolElim,
+  vEmpty,
+  vEmptyElim,
   vEq,
   vEqElim,
+  vFalse,
   vLevel,
   vLMax,
   vLSucc,
@@ -8,14 +13,33 @@ module VarNames (
   vRefl,
   vSigma,
   vSigmaElim,
-  vType
+  vStar,
+  vTrue,
+  vType,
+  vUnit,
+  vUnitElim
   ) where
+
+vBool :: String
+vBool = "Bool"
+
+vBoolElim :: String
+vBoolElim = "Bool.elim"
+
+vEmpty :: String
+vEmpty = "Empty"
+
+vEmptyElim :: String
+vEmptyElim = "Empty.elim"
 
 vEq :: String
 vEq = "Eq"
 
 vEqElim :: String
 vEqElim = "Eq.elim"
+
+vFalse :: String
+vFalse = "false"
 
 vLevel :: String
 vLevel = "Level"
@@ -38,5 +62,17 @@ vSigma = "Sigma"
 vSigmaElim :: String
 vSigmaElim = "Sigma.elim"
 
+vStar :: String
+vStar = "star"
+
+vTrue :: String
+vTrue = "true"
+
 vType :: String
 vType = "Type"
+
+vUnit :: String
+vUnit = "Unit"
+
+vUnitElim :: String
+vUnitElim = "Unit.elim"
