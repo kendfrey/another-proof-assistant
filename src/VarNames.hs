@@ -14,10 +14,13 @@ module VarNames (
   vSigma,
   vSigmaElim,
   vStar,
+  vSup,
   vTrue,
   vType,
   vUnit,
-  vUnitElim
+  vUnitElim,
+  vW,
+  vWElim,
   ) where
 
 vBool :: String
@@ -65,6 +68,9 @@ vSigmaElim = "Sigma.elim"
 vStar :: String
 vStar = "star"
 
+vSup :: String
+vSup = "sup"
+
 vTrue :: String
 vTrue = "true"
 
@@ -76,3 +82,9 @@ vUnit = "Unit"
 
 vUnitElim :: String
 vUnitElim = "Unit.elim"
+
+vW :: String
+vW = "W"
+
+vWElim :: String
+vWElim = "W.elim"

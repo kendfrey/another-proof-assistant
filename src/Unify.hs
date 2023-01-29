@@ -51,6 +51,18 @@ unify _c _x _y = trace ("\nUnifying " ++ showValue _x ++ " and " ++ showValue _y
   unify' c (VBool u) (VBool u') = unify c u u'
   unify' c (VTrue u) (VTrue u') = unify c u u'
   unify' c (VFalse u) (VFalse u') = unify c u u'
+  unify' c (VW u v a b) (VW u' v' a' b') = do
+    unify c u u'
+    unify c v v'
+    unify c a a'
+    unify c b b'
+  unify' c (VSup u v a b i f) (VSup u' v' a' b' i' f') = do
+    unify c u u'
+    unify c v v'
+    unify c a a'
+    unify c b b'
+    unify c i i'
+    unify c f f'
   unify' _ _ _ = fail "Could not unify"
 
 unifyStuck :: MonadTrace m => Ctx -> Stuck -> Stuck -> m ()
@@ -89,6 +101,15 @@ unifyStuck _c _x _y = trace ("\nUnifying " ++ showStuck _x ++ " and " ++ showStu
     unify c p p'
     unify c ht ht'
     unify c hf hf'
+    unifyStuck c x x'
+  unifyStuck' c (SWElim u v w a b p ih x) (SWElim u' v' w' a' b' p' ih' x') = do
+    unify c u u'
+    unify c v v'
+    unify c w w'
+    unify c a a'
+    unify c b b'
+    unify c p p'
+    unify c ih ih'
     unifyStuck c x x'
   unifyStuck' _ _ _ = fail "Could not unify"
 

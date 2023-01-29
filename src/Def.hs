@@ -69,6 +69,15 @@ defaultCtx = []
   |- Def False vBoolElim
     (VPi VLevel ("u", TPi "v" TLevel (TPi "P" (TPi "_" (TBool (TVar "u" 1)) (TType (TVar "v" 1))) (TPi "_" (TApp (TVar "P" 0) (TTrue (TVar "u" 2))) (TPi "_" (TApp (TVar "P" 1) (TFalse (TVar "u" 3))) (TPi "x" (TBool (TVar "u" 4)) (TApp (TVar "P" 3) (TVar "x" 0)))))), []))
     (VLam ("u", TLam "v" (TLam "P" (TLam "ht" (TLam "hf" (TLam "x" (TBoolElim (TVar "u" 5) (TVar "v" 4) (TVar "P" 3) (TVar "ht" 2) (TVar "hf" 1) (TVar "x" 0)))))), []))
+  |- Def False vW
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "A" (TType (TVar "u" 1)) (TPi "_" (TPi "_" (TVar "A" 0) (TType (TVar "v" 2))) (TType (TLMax (TVar "u" 3) (TVar "v" 2))))), []))
+    (VLam ("u", TLam "v" (TLam "A" (TLam "B" (TW (TVar "u" 3) (TVar "v" 2) (TVar "A" 1) (TVar "B" 0)))), []))
+  |- Def False vSup
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "A" (TType (TVar "u" 1)) (TPi "B" (TPi "_" (TVar "A" 0) (TType (TVar "v" 2))) (TPi "i" (TVar "A" 1) (TPi "_" (TPi "_" (TApp (TVar "B" 1) (TVar "i" 0)) (TW (TVar "u" 5) (TVar "v" 4) (TVar "A" 3) (TVar "B" 2))) (TW (TVar "u" 5) (TVar "v" 4) (TVar "A" 3) (TVar "B" 2)))))), []))
+    (VLam ("u", TLam "v" (TLam "A" (TLam "B" (TLam "i" (TLam "f" (TSup (TVar "u" 5) (TVar "v" 4) (TVar "A" 3) (TVar "B" 2) (TVar "i" 1) (TVar "f" 0)))))), []))
+  |- Def False vWElim
+    (VPi VLevel ("u", TPi "v" TLevel (TPi "w" TLevel (TPi "A" (TType (TVar "u" 2)) (TPi "B" (TPi "_" (TVar "A" 0) (TType (TVar "v" 3))) (TPi "P" (TPi "_" (TW (TVar "u" 4) (TVar "v" 3) (TVar "A" 1) (TVar "B" 0)) (TType (TVar "w" 3))) (TPi "_" (TPi "i" (TVar "A" 2) (TPi "f" (TPi "_" (TApp (TVar "B" 2) (TVar "i" 0)) (TW (TVar "u" 7) (TVar "v" 6) (TVar "A" 4) (TVar "B" 3))) (TPi "_" (TPi "j" (TApp (TVar "B" 3) (TVar "i" 1)) (TApp (TVar "P" 3) (TApp (TVar "f" 1) (TVar "j" 0)))) (TApp (TVar "P" 3) (TSup (TVar "u" 8) (TVar "v" 7) (TVar "A" 5) (TVar "B" 4) (TVar "i" 2) (TVar "f" 1)))))) (TPi "x" (TW (TVar "u" 6) (TVar "v" 5) (TVar "A" 3) (TVar "B" 2)) (TApp (TVar "P" 2) (TVar "x" 0)))))))), []))
+    (VLam ("u", TLam "v" (TLam "w" (TLam "A" (TLam "B" (TLam "P" (TLam "ih" (TLam "x" (TWElim (TVar "u" 7) (TVar "v" 6) (TVar "w" 5) (TVar "A" 4) (TVar "B" 3) (TVar "P" 2) (TVar "ih" 1) (TVar "x" 0)))))))), []))
 
 addDef :: Bool -> String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
 addDef o s a x = do

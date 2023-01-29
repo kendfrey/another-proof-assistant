@@ -31,8 +31,23 @@ Sigma.eta : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (
 absurd : (u : Level) -> (v : Level) -> (A : Type v) -> Empty u -> A :=
   u => v => A => Empty.elim u v (_ => A);
 
-Unit.IsProp : (u : Level) -> (x : Unit u) -> (y : Unit u) -> Eq u (Unit u) x y :=
+Unit.isProp : (u : Level) -> (x : Unit u) -> (y : Unit u) -> Eq u (Unit u) x y :=
   u => x => y => refl u (Unit u) (star u);
 
 trueNeFalse : (u : Level) -> (v : Level) -> Eq u (Bool u) (true u) (false u) -> Empty v :=
   u => v => Eq.elim u v (Bool u) (true u) (b => _ => Bool.elim u (lSucc v) (_ => Type v) (Unit v) (Empty v) b) (star v) (false u);
+
+IsFalse : (u : Level) -> Bool u -> Type u :=
+  u => Bool.elim u (lSucc u) (_ => Type u) (Empty u) (Unit u);
+Nat : (u : Level) -> Type u :=
+  u => W u u (Bool u) (IsFalse u);
+zero : (u : Level) -> Nat u :=
+  u => sup u u (Bool u) (IsFalse u) (true u) (Empty.elim u u (_ => Nat u));
+succ : (u : Level) -> Nat u -> Nat u :=
+  u => n => sup u u (Bool u) (IsFalse u) (false u) (_ => n);
+Nat.elim : (u : Level) -> (v : Level) -> (P : Nat u -> Type v) -> P (zero u) -> ((n : Nat u) -> P n -> P (succ u n)) -> (n : Nat u) -> P n :=
+  u => v => P => h => ih => W.elim u u v (Bool u) (IsFalse u) P
+    (Bool.elim u (lMax u v) (i => (f : IsFalse u i -> Nat u) -> ((j : IsFalse u i) -> P (f j)) -> P (sup u u (Bool u) (IsFalse u) i f))
+      (f => h' => ?)
+      (f => h' => ih (f (star u)) (h' (star u)))
+    );

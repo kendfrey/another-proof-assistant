@@ -73,6 +73,9 @@ data Term
   | TTrue Term
   | TFalse Term
   | TBoolElim Term Term Term Term Term Term
+  | TW Term Term Term Term
+  | TSup Term Term Term Term Term Term
+  | TWElim Term Term Term Term Term Term Term Term
   deriving (Show)
 
 type Env = [Value]
@@ -98,6 +101,8 @@ data Value
   | VBool Value
   | VTrue Value
   | VFalse Value
+  | VW Value Value Value Value
+  | VSup Value Value Value Value Value Value
 
 data Stuck
   = SVar String Int
@@ -107,3 +112,4 @@ data Stuck
   | SEqElim Value Value Value Value Value Value Value Stuck
   | SEmptyElim Value Value Value Stuck
   | SBoolElim Value Value Value Value Value Stuck
+  | SWElim Value Value Value Value Value Value Value Stuck
