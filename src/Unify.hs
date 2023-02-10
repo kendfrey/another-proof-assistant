@@ -12,7 +12,9 @@ unify :: MonadTrace m => Ctx -> Value -> Value -> m ()
 unify _c _x _y = trace ("\nUnifying " ++ showValue _x ++ " and " ++ showValue _y) $ unify' _c _x _y
   where
   unify' :: MonadTrace m => Ctx -> Value -> Value -> m ()
-  unify' c (VStuck x) (VStuck y) = unifyStuck c x y
+  unify' c (VStuck _ (Just x)) y = unify c x y
+  unify' c x (VStuck _ (Just y)) = unify c x y
+  unify' c (VStuck x Nothing) (VStuck y Nothing) = unifyStuck c x y
   unify' _ VLevel VLevel = return ()
   unify' _ x@(VLSucc _) y = unifyLevel x y
   unify' _ x y@(VLSucc _) = unifyLevel x y
@@ -123,7 +125,8 @@ unifyLevel x y = do
     fail "Could not unify"
 
 reduceLevel :: MonadFail m => Value -> m (Map Int Int)
-reduceLevel (VStuck (SVar _ x)) = return $ singleton x 0
+reduceLevel (VStuck (SVar _ x) Nothing) = return $ singleton x 0
+reduceLevel (VStuck _ (Just x)) = reduceLevel x
 reduceLevel (VLSucc x) = M.map (+1) <$> reduceLevel x
 reduceLevel (VLMax x y) = unionWith max <$> reduceLevel x <*> reduceLevel y
 reduceLevel x = fail $ "Unsupported universe level " ++ showValue x

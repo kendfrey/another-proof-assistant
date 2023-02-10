@@ -79,50 +79,11 @@ defaultCtx = []
     (VPi VLevel ("u", TPi "v" TLevel (TPi "w" TLevel (TPi "A" (TType (TVar "u" 2)) (TPi "B" (TPi "_" (TVar "A" 0) (TType (TVar "v" 3))) (TPi "P" (TPi "_" (TW (TVar "u" 4) (TVar "v" 3) (TVar "A" 1) (TVar "B" 0)) (TType (TVar "w" 3))) (TPi "_" (TPi "i" (TVar "A" 2) (TPi "f" (TPi "_" (TApp (TVar "B" 2) (TVar "i" 0)) (TW (TVar "u" 7) (TVar "v" 6) (TVar "A" 4) (TVar "B" 3))) (TPi "_" (TPi "j" (TApp (TVar "B" 3) (TVar "i" 1)) (TApp (TVar "P" 3) (TApp (TVar "f" 1) (TVar "j" 0)))) (TApp (TVar "P" 3) (TSup (TVar "u" 8) (TVar "v" 7) (TVar "A" 5) (TVar "B" 4) (TVar "i" 2) (TVar "f" 1)))))) (TPi "x" (TW (TVar "u" 6) (TVar "v" 5) (TVar "A" 3) (TVar "B" 2)) (TApp (TVar "P" 2) (TVar "x" 0)))))))), []))
     (VLam ("u", TLam "v" (TLam "w" (TLam "A" (TLam "B" (TLam "P" (TLam "ih" (TLam "x" (TWElim (TVar "u" 7) (TVar "v" 6) (TVar "w" 5) (TVar "A" 4) (TVar "B" 3) (TVar "P" 2) (TVar "ih" 1) (TVar "x" 0)))))))), []))
 
-addDef :: Bool -> String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
-addDef o s a x = do
+addDef :: String -> Expr -> Expr -> StateT Ctx (AccumT [Goal] Error) ()
+addDef s a x = trace ("\nDefining " ++ s) $ do
   c <- get
   (a', _) <- lift $ elaborateType c a
   let a'' = reduce (env c) a'
   x' <- lift $ elaborate c a'' x
   let x'' = reduce (env c) x'
-  if o then do
-    let s' = newVar c s
-    let c' = c |- Def False s a'' s'
-    let c'' = c' |- Def False "#def" a'' x''
-    lemma <- lift $ trace "\nCould not generate definitional equality" $ getEquality c'' a []
-    let lemma' = reduce (env c'') lemma
-    put (c' |- Def False (s ++ ".eq") lemma' (newVar c' (s ++ ".eq")))
-  else
-    put (c |- Def False s a'' x'')
-
-getEquality :: Ctx -> Expr -> [Value] -> AccumT [Goal] Error Term
-getEquality c a e = do
-  (a', ta) <- elaborateType c a
-  case ta of
-    VTypeOmega _ ->
-      case a of
-        Pi s a'' b -> do
-          (a''', _) <- elaborateType c a''
-          let a'''' = reduce (env c) a'''
-          let s' = newVar c s
-          eq <- getEquality (c |- Def True s a'''' s') b (s' : e)
-          return $ TPi s a''' eq
-        _ -> fail "Pi expression expected"
-    VType u -> do
-      u' <- getLevelExpr e u
-      return $ TEq u' a' (generateEqArg (length e) 0 0) (generateEqArg (length e) 0 1)
-    _ -> fail "Type expected"
-  where
-  getLevelExpr :: MonadFail m => [Value] -> Value -> m Term
-  getLevelExpr e' (VStuck (SVar s n)) = TVar s <$> lookupVar e' n
-  getLevelExpr e' (VLSucc u) = TLSucc <$> getLevelExpr e' u
-  getLevelExpr e' (VLMax u v) = TLMax <$> getLevelExpr e' u <*> getLevelExpr e' v
-  getLevelExpr _ _ = fail "Unknown level"
-  lookupVar :: MonadFail m => [Value] -> Int -> m Int
-  lookupVar (VStuck (SVar _ m) : e') n | n == m = return 0
-                                      | otherwise = (+1) <$> lookupVar e' n
-  lookupVar _ _ = fail "Unknown variable"
-  generateEqArg :: Int -> Int -> Int -> Term
-  generateEqArg 0 _ n = TVar "#" n
-  generateEqArg l m n = TApp (generateEqArg (l - 1) (m + 1) (n + 1)) (TVar "#" m)
+  put (c |- Def False s a'' (VStuck (SVar s (length c)) (Just x'')))

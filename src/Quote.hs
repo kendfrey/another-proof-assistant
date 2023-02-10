@@ -5,7 +5,7 @@ import Syntax
 import VarNames
 
 quote :: Value -> Expr
-quote (VStuck s) = quoteStuck s
+quote (VStuck s _) = quoteStuck s
 quote VLevel = Var vLevel
 quote (VLSucc u) = App (Var vLSucc) (quote u)
 quote (VLMax u v) = App (App (Var vLMax) (quote u)) (quote v)
@@ -37,7 +37,7 @@ quoteStuck (SBoolElim u v p ht hf x) = App (App (App (App (App (App (Var vBoolEl
 quoteStuck (SWElim u v w a b p ih x) = App (App (App (App (App (App (App (App (Var vWElim) (quote u)) (quote v)) (quote w)) (quote a)) (quote b)) (quote p)) (quote ih)) (quoteStuck x)
 
 quoteClosure :: Closure -> Expr
-quoteClosure (s, x, e) = quote (reduce (VStuck (SVar s (error "quoteClosure")) : e) x)
+quoteClosure (s, x, e) = quote (reduce (VStuck (SVar s (error "quoteClosure")) Nothing : e) x)
 
 showValue :: Value -> String
 showValue = show . quote

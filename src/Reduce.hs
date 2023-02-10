@@ -4,7 +4,7 @@ import Syntax
 
 reduce :: Env -> Term -> Value
 reduce e (TVar _ n) = e !! n
-reduce _ (THole n) = VStuck (SMVar n)
+reduce _ (THole n) = VStuck (SMVar n) Nothing
 reduce _ TLevel = VLevel
 reduce e (TLSucc u) = VLSucc (reduce e u)
 reduce e (TLMax u v) = VLMax (reduce e u) (reduce e v)
@@ -33,30 +33,30 @@ reduce e (TWElim u v w a b p ih x) = reduceWElim (reduce e u) (reduce e v) (redu
 
 reduceApp :: Value -> Value -> Value
 reduceApp (VLam (_, f, e)) x = reduce (x : e) f
-reduceApp (VStuck f) x = VStuck (SApp f x)
+reduceApp (VStuck f f') x = VStuck (SApp f x) (flip reduceApp x <$> f')
 reduceApp _ _ = error "reduceApp"
 
 reduceSigmaElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value
 reduceSigmaElim _ _ _ _ _ _ ih (VPair _ _ _ _ x y) = reduceApp (reduceApp ih x) y
-reduceSigmaElim u v w a b p ih (VStuck x) = VStuck (SSigmaElim u v w a b p ih x)
+reduceSigmaElim u v w a b p ih (VStuck x x') = VStuck (SSigmaElim u v w a b p ih x) (reduceSigmaElim u v w a b p ih <$> x')
 reduceSigmaElim _ _ _ _ _ _ _ _ = error "reduceSigmaElim"
 
 reduceEqElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value
 reduceEqElim _ _ _ _ _ ih _ (VRefl _ _ _) = ih
-reduceEqElim u v a x p ih y (VStuck h) = VStuck (SEqElim u v a x p ih y h)
+reduceEqElim u v a x p ih y (VStuck h h') = VStuck (SEqElim u v a x p ih y h) (reduceEqElim u v a x p ih y <$> h')
 reduceEqElim _ _ _ _ _ _ _ _ = error "reduceEqElim"
 
 reduceEmptyElim :: Value -> Value -> Value -> Value -> Value
-reduceEmptyElim u v p (VStuck x) = VStuck (SEmptyElim u v p x)
+reduceEmptyElim u v p (VStuck x x') = VStuck (SEmptyElim u v p x) (reduceEmptyElim u v p <$> x')
 reduceEmptyElim _ _ _ _ = error "reduceEmptyElim"
 
 reduceBoolElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value
 reduceBoolElim _ _ _ ht _ (VTrue _) = ht
 reduceBoolElim _ _ _ _ hf (VFalse _) = hf
-reduceBoolElim u v p ht hf (VStuck x) = VStuck (SBoolElim u v p ht hf x)
+reduceBoolElim u v p ht hf (VStuck x x') = VStuck (SBoolElim u v p ht hf x) (reduceBoolElim u v p ht hf <$> x')
 reduceBoolElim _ _ _ _ _ _ = error "reduceBoolElim"
 
 reduceWElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value
 reduceWElim u v w a b p ih (VSup _ _ _ _ i f) = reduceApp (reduceApp (reduceApp ih i) f) (VLam ("y", TWElim (TVar "u" 8) (TVar "v" 7) (TVar "w" 6) (TVar "a" 5) (TVar "b" 4) (TVar "p" 3) (TVar "ih" 2) (TApp (TVar "f" 1) (TVar "y" 0)), [f, ih, p, b, a, w, v, u]))
-reduceWElim u v w a b p ih (VStuck x) = VStuck (SWElim u v w a b p ih x)
+reduceWElim u v w a b p ih (VStuck x x') = VStuck (SWElim u v w a b p ih x) (reduceWElim u v w a b p ih <$> x')
 reduceWElim _ _ _ _ _ _ _ _ = error "reduceWElim"

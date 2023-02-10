@@ -83,7 +83,7 @@ type Env = [Value]
 type Closure = (String, Term, Env)
 
 data Value
-  = VStuck Stuck
+  = VStuck Stuck (Maybe Value)
   | VLevel
   | VLSucc Value
   | VLMax Value Value

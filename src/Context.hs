@@ -20,4 +20,4 @@ getVar = getVar' 0
                       | otherwise = getVar' (n + 1) s c
 
 newVar :: Ctx -> String -> Value
-newVar c s = VStuck (SVar s (length c))
+newVar c s = VStuck (SVar s (length c)) Nothing

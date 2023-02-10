@@ -3,6 +3,7 @@
 module Error (Error(..), MonadTrace, mapError, trace) where
 
 import Control.Monad.Trans.Accum
+import Control.Monad.Trans.State
 
 newtype Error a = Error (Either String a) deriving (Functor, Applicative, Monad)
 
@@ -22,3 +23,6 @@ instance MonadTrace Error where
 
 instance (Monoid w, MonadTrace m) => MonadTrace (AccumT w m) where
   trace s = mapAccumT (trace s)
+
+instance (MonadTrace m) => MonadTrace (StateT s m) where
+  trace s = mapStateT (trace s)

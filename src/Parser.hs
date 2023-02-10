@@ -6,7 +6,6 @@ import Context
 import Control.Monad.Trans.Accum
 import Control.Monad.Trans.State
 import Data.Functor
-import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text.IO as T
 import Data.Void
@@ -32,14 +31,13 @@ defs = do
 
 def :: Parser (StateT Ctx (AccumT [Goal] Error) ())
 def = do
-  o <- isJust <$> optional (symbol "#")
   s <- identifier
   symbol ":"
   a <- expr
   symbol ":="
   x <- expr
   symbol ";"
-  return $ addDef o s a x
+  return $ addDef s a x
 
 expr :: Parser Expr
 expr = label "expression" $ try ePi <|> try eLam <|> try appChunk

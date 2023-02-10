@@ -11,6 +11,7 @@ import Elaborate
 import Error
 import Parser
 import Quote
+import Syntax
 import Text.Megaparsec.Error
 
 main :: IO ()
@@ -30,4 +31,8 @@ showCtx :: Bool -> Ctx -> String
 showCtx local = intercalate "\n" . reverse . map (showDef local) . filter ((not local ||) . defLocal)
 
 showDef :: Bool -> Def -> String
-showDef local d = defName d ++ " : " ++ showValue (defType d) ++ (if local then "" else " := " ++ showValue (defValue d))
+showDef local d = defName d ++ " : " ++ showValue (defType d) ++ (if local then "" else " := " ++ showDefValue (defValue d))
+
+showDefValue :: Value -> String
+showDefValue (VStuck _ (Just x)) = showDefValue x
+showDefValue x = showValue x

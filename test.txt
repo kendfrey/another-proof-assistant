@@ -7,20 +7,6 @@ const : (u : Level) -> (A : Type u) -> A -> A -> A :=
 quoteClosureTest : (u : Level) -> (A : Type u) -> (x : A) -> (P : (A -> A) -> Type u) -> P (const u A x) :=
 	u => A => test => P => ?;
 
-#Id : (u : Level) -> Type u -> Type u :=
-  u => A => A;
-#Id.mk : (u : Level) -> (A : Type u) -> A -> Id u A :=
-  u => A => x => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x (Id u) (Id.eq u);
-#Id.out : (u : Level) -> (A : Type u) -> Id u A -> A :=
-  u => A => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u);
-Id.outMk : (u : Level) -> (A : Type u) -> (x : A) -> Eq u A x (Id.out u A (Id.mk u A x)) :=
-  u => A => x =>
-    Eq.elim (lSucc u) u ((A : Type u) -> Id u A -> A) (A => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u)) (o => h => Eq u A x (o A (Id.mk u A x)))
-      (Eq.elim (lSucc u) u ((A : Type u) -> A -> Id u A) (A => x => Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x (Id u) (Id.eq u)) (m => h => Eq u A x (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) (Id u) (Id.eq u) (m A x)))
-        (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => Eq u A x (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A -> A) (x => x) i h (Eq.elim (lSucc u) u (Type u -> Type u) (A => A) (i => h => i A) x i h))) (refl u A x) (Id u) (Id.eq u))
-      (Id.mk u) (Id.mk.eq u))
-    (Id.out u) (Id.out.eq u);
-
 fst : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> Sigma u v A B -> A :=
   u => v => A => B => Sigma.elim u v u A B (_ => A) (x => _ => x);
 snd : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Sigma u v A B) -> B (fst u v A B x) :=
@@ -48,6 +34,6 @@ succ : (u : Level) -> Nat u -> Nat u :=
 Nat.elim : (u : Level) -> (v : Level) -> (P : Nat u -> Type v) -> P (zero u) -> ((n : Nat u) -> P n -> P (succ u n)) -> (n : Nat u) -> P n :=
   u => v => P => h => ih => W.elim u u v (Bool u) (IsFalse u) P
     (Bool.elim u (lMax u v) (i => (f : IsFalse u i -> Nat u) -> ((j : IsFalse u i) -> P (f j)) -> P (sup u u (Bool u) (IsFalse u) i f))
-      (f => h' => ?)
+      (f => h' => Eq.elim u v (Empty u -> Nat u) (Empty.elim u u (_ => Nat u)) (y => _ => P (sup u u (Bool u) (IsFalse u) (true u) y)) h f ?)
       (f => h' => ih (f (star u)) (h' (star u)))
     );
