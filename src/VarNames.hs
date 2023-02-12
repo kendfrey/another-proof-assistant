@@ -7,9 +7,13 @@ module VarNames (
   vEqElim,
   vFalse,
   vLevel,
+  vPack,
   vLMax,
   vLSucc,
   vPair,
+  vQuot,
+  vQuotElim,
+  vQuotSound,
   vRefl,
   vSigma,
   vSigmaElim,
@@ -47,6 +51,9 @@ vFalse = "false"
 vLevel :: String
 vLevel = "Level"
 
+vPack :: String
+vPack = "pack"
+
 vLMax :: String
 vLMax = "lMax"
 
@@ -55,6 +62,15 @@ vLSucc = "lSucc"
 
 vPair :: String
 vPair = "pair"
+
+vQuot :: String
+vQuot = "Quot"
+
+vQuotElim :: String
+vQuotElim = "Quot.elim"
+
+vQuotSound :: String
+vQuotSound = "Quot.sound"
 
 vRefl :: String
 vRefl = "refl"

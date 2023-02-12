@@ -14,26 +14,59 @@ snd : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Si
 Sigma.eta : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (x : Sigma u v A B) -> Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x)) :=
   u => v => A => B => Sigma.elim u v (lMax u v) A B (x => Eq (lMax u v) (Sigma u v A B) x (pair u v A B (fst u v A B x) (snd u v A B x))) (x => y => refl (lMax u v) (Sigma u v A B) (pair u v A B x y));
 
+IsProp : (u : Level) -> Type u -> Type u :=
+  u => A => (x : A) -> (y : A) -> Eq u A x y;
+
 absurd : (u : Level) -> (v : Level) -> (A : Type v) -> Empty u -> A :=
   u => v => A => Empty.elim u v (_ => A);
 
-Unit.isProp : (u : Level) -> (x : Unit u) -> (y : Unit u) -> Eq u (Unit u) x y :=
+Unit.isProp : (u : Level) -> IsProp u (Unit u) :=
   u => x => y => refl u (Unit u) (star u);
 
 trueNeFalse : (u : Level) -> (v : Level) -> Eq u (Bool u) (true u) (false u) -> Empty v :=
   u => v => Eq.elim u v (Bool u) (true u) (b => _ => Bool.elim u (lSucc v) (_ => Type v) (Unit v) (Empty v) b) (star v) (false u);
+
+Eq.elim.simpConst : (u : Level) -> (v : Level) -> (A : Type u) -> (B : Type v) -> (x : A) -> (y : A) -> (h : Eq u A x y) -> (z : B) -> Eq v B z (Eq.elim u v A x (_ => _ => B) z y h) :=
+  u => v => A => P => x => y => h => z => Eq.elim u v A x (y => h => Eq v P z (Eq.elim u v A x (_ => _ => P) z y h)) (refl v P z) y h;
+
+Quot.proj : (u : Level) -> (v : Level) -> (w : Level) -> (A : Type u) -> (R : A -> A -> Type v) -> (B : Type w) -> (f : A -> B) -> ((x : A) -> (y : A) -> (h : R x y) -> Eq w B (f x) (f y)) -> (x : Quot u v A R) -> B :=
+  u => v => w => A => R => B => f => h => Quot.elim u v w A R (_ => B) f (x => y => h' =>
+    Eq.elim w w B (f x) (z => _ => Eq w B z (f y)) (h x y h')
+      (Eq.elim (lMax u v) w (Quot u v A R) (pack u v A R x) (_ => _ => B) (f x) (pack u v A R y) (Quot.sound u v A R x y h'))
+      (Eq.elim.simpConst (lMax u v) w (Quot u v A R) B (pack u v A R x) (pack u v A R y) (Quot.sound u v A R x y h') (f x)));
+
+congr : (u : Level) -> (v : Level) -> (A : Type u) -> (B : Type v) -> (f : A -> B) -> (x : A) -> (y : A) -> (h : Eq u A x y) -> Eq v B (f x) (f y) :=
+  u => v => A => B => f => x => y => h => Eq.elim u v A x (y => _ => Eq v B (f x) (f y)) (refl v B (f x)) y h;
+congr' : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (f : (x : A) -> B x) -> (x : A) -> (y : A) -> (h : Eq u A x y) -> Eq v (B y) (Eq.elim u v A x (y => _ => B y) (f x) y h) (f y) :=
+  u => v => A => B => f => x => y => h => Eq.elim u v A x (y => h => Eq v (B y) (Eq.elim u v A x (y => _ => B y) (f x) y h) (f y)) (refl v (B x) (f x)) y h;
+
+EquivFun : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (f : (x : A) -> B x) -> (g : (x : A) -> B x) -> Type (lMax u v) :=
+  u => v => A => B => f => g => (x : A) -> Eq v (B x) (f x) (g x);
+ExtFun : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> Type (lMax u v) :=
+  u => v => A => B => Quot (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B);
+packFun : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> ((x : A) -> B x) -> ExtFun u v A B :=
+  u => v => A => B => pack (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B);
+extractFun : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> ExtFun u v A B -> (x : A) -> B x :=
+  u => v => A => B => f' => x => Quot.proj (lMax u v) (lMax u v) v ((x : A) -> B x) (EquivFun u v A B) (B x) (f => f x) (f => g => h => h x) f';
+funExt' : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> (f : (x : A) -> B x) -> (g : (x : A) -> B x) -> EquivFun u v A B f g -> Eq (lMax u v) ((x : A) -> B x) f g :=
+  u => v => A => B => f => g => h => congr (lMax u v) (lMax u v) (ExtFun u v A B) ((x : A) -> B x) (extractFun u v A B) (packFun u v A B f) (packFun u v A B g) (Quot.sound (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B) f g h);
+funExt : (u : Level) -> (v : Level) -> (A : Type u) -> (B : Type v) -> (f : A -> B) -> (g : A -> B) -> EquivFun u v A (_ => B) f g -> Eq (lMax u v) (A -> B) f g :=
+  u => v => A => B => funExt' u v A (_ => B);
+
+absurdIsProp : (u : Level) -> (v : Level) -> (A : Type v) -> IsProp (lMax u v) (Empty u -> A) :=
+  u => v => A => f => g => funExt u v (Empty u) A f g (x => absurd u v (Eq v A (f x) (g x)) x);
 
 IsFalse : (u : Level) -> Bool u -> Type u :=
   u => Bool.elim u (lSucc u) (_ => Type u) (Empty u) (Unit u);
 Nat : (u : Level) -> Type u :=
   u => W u u (Bool u) (IsFalse u);
 zero : (u : Level) -> Nat u :=
-  u => sup u u (Bool u) (IsFalse u) (true u) (Empty.elim u u (_ => Nat u));
+  u => sup u u (Bool u) (IsFalse u) (true u) (absurd u u (Nat u));
 succ : (u : Level) -> Nat u -> Nat u :=
   u => n => sup u u (Bool u) (IsFalse u) (false u) (_ => n);
 Nat.elim : (u : Level) -> (v : Level) -> (P : Nat u -> Type v) -> P (zero u) -> ((n : Nat u) -> P n -> P (succ u n)) -> (n : Nat u) -> P n :=
   u => v => P => h => ih => W.elim u u v (Bool u) (IsFalse u) P
     (Bool.elim u (lMax u v) (i => (f : IsFalse u i -> Nat u) -> ((j : IsFalse u i) -> P (f j)) -> P (sup u u (Bool u) (IsFalse u) i f))
-      (f => h' => Eq.elim u v (Empty u -> Nat u) (Empty.elim u u (_ => Nat u)) (y => _ => P (sup u u (Bool u) (IsFalse u) (true u) y)) h f ?)
+      (f => h' => Eq.elim u v (Empty u -> Nat u) (absurd u u (Nat u)) (y => _ => P (sup u u (Bool u) (IsFalse u) (true u) y)) h f (absurdIsProp u u (Nat u) (absurd u u (Nat u)) f))
       (f => h' => ih (f (star u)) (h' (star u)))
     );

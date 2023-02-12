@@ -38,6 +38,7 @@ elaborate _c _a _x = trace ("\nElaborating " ++ show _x ++ " as " ++ showValue _
     let x = newVar c s
     f' <- elaborate (c |- Def True s a x) (reduce (x : e) b) f
     return $ TLam s f'
+  elaborate' c (VStuck _ (Just a)) x = elaborate c a x
   elaborate' _ _ _ = fail "Could not elaborate"
 
 elaborateType :: MonadTrace m => Ctx -> Expr -> AccumT [Goal] m (Term, Value)
@@ -84,13 +85,17 @@ tpMax (VType x) (VType y) = VType (VLMax x y)
 tpMax (VType _) (VTypeOmega n) = VTypeOmega n
 tpMax (VTypeOmega n) (VType _) = VTypeOmega n
 tpMax (VTypeOmega n) (VTypeOmega m) = VTypeOmega (max n m)
+tpMax (VStuck _ (Just a)) b = tpMax a b
+tpMax a (VStuck _ (Just b)) = tpMax a b
 tpMax _ _ = error "tpMax"
 
 getPi :: MonadFail m => Value -> m (Value, Closure)
 getPi (VPi a b) = return (a, b)
+getPi (VStuck _ (Just x)) = getPi x
 getPi _ = fail "Function expected"
 
 checkType :: MonadFail m => Value -> m ()
 checkType (VType _) = return ()
 checkType (VTypeOmega _) = return ()
+checkType (VStuck _ (Just a)) = checkType a
 checkType _ = fail "Type expected"

@@ -1,4 +1,4 @@
-module Quote (quote, showValue, showStuck) where
+module Quote (showValue, showStuck) where
 
 import Reduce
 import Syntax
@@ -25,6 +25,8 @@ quote (VTrue u) = App (Var vTrue) (quote u)
 quote (VFalse u) = App (Var vFalse) (quote u)
 quote (VW u v a b) = App (App (App (App (Var vW) (quote u)) (quote v)) (quote a)) (quote b)
 quote (VSup u v a b i f) = App (App (App (App (App (App (Var vSup) (quote u)) (quote v)) (quote a)) (quote b)) (quote i)) (quote f)
+quote (VQuot u v a r) = App (App (App (App (Var vQuot) (quote u)) (quote v)) (quote a)) (quote r)
+quote (VPack u v a r x) = App (App (App (App (App (Var vPack) (quote u)) (quote v)) (quote a)) (quote r)) (quote x)
 
 quoteStuck :: Stuck -> Expr
 quoteStuck (SVar s _) = Var s
@@ -35,6 +37,7 @@ quoteStuck (SEqElim u v a x p ih y h) = App (App (App (App (App (App (App (App (
 quoteStuck (SEmptyElim u v p x) = App (App (App (App (Var vEmptyElim) (quote u)) (quote v)) (quote p)) (quoteStuck x)
 quoteStuck (SBoolElim u v p ht hf x) = App (App (App (App (App (App (Var vBoolElim) (quote u)) (quote v)) (quote p)) (quote ht)) (quote hf)) (quoteStuck x)
 quoteStuck (SWElim u v w a b p ih x) = App (App (App (App (App (App (App (App (Var vWElim) (quote u)) (quote v)) (quote w)) (quote a)) (quote b)) (quote p)) (quote ih)) (quoteStuck x)
+quoteStuck (SQuotElim u v w a r p f h x) = App (App (App (App (App (App (App (App (App (Var vQuotElim) (quote u)) (quote v)) (quote w)) (quote a)) (quote r)) (quote p)) (quote f)) (quote h)) (quoteStuck x)
 
 quoteClosure :: Closure -> Expr
 quoteClosure (s, x, e) = quote (reduce (VStuck (SVar s (error "quoteClosure")) Nothing : e) x)

@@ -30,6 +30,9 @@ reduce e (TBoolElim u v p ht hf x) = reduceBoolElim (reduce e u) (reduce e v) (r
 reduce e (TW u v a b) = VW (reduce e u) (reduce e v) (reduce e a) (reduce e b)
 reduce e (TSup u v a b i f) = VSup (reduce e u) (reduce e v) (reduce e a) (reduce e b) (reduce e i) (reduce e f)
 reduce e (TWElim u v w a b p ih x) = reduceWElim (reduce e u) (reduce e v) (reduce e w) (reduce e a) (reduce e b) (reduce e p) (reduce e ih) (reduce e x)
+reduce e (TQuot u v a r) = VQuot (reduce e u) (reduce e v) (reduce e a) (reduce e r)
+reduce e (TPack u v a r x) = VPack (reduce e u) (reduce e v) (reduce e a) (reduce e r) (reduce e x)
+reduce e (TQuotElim u v w a r p f h x) = reduceQuotElim (reduce e u) (reduce e v) (reduce e w) (reduce e a) (reduce e r) (reduce e p) (reduce e f) (reduce e h) (reduce e x)
 
 reduceApp :: Value -> Value -> Value
 reduceApp (VLam (_, f, e)) x = reduce (x : e) f
@@ -60,3 +63,8 @@ reduceWElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> Va
 reduceWElim u v w a b p ih (VSup _ _ _ _ i f) = reduceApp (reduceApp (reduceApp ih i) f) (VLam ("y", TWElim (TVar "u" 8) (TVar "v" 7) (TVar "w" 6) (TVar "a" 5) (TVar "b" 4) (TVar "p" 3) (TVar "ih" 2) (TApp (TVar "f" 1) (TVar "y" 0)), [f, ih, p, b, a, w, v, u]))
 reduceWElim u v w a b p ih (VStuck x x') = VStuck (SWElim u v w a b p ih x) (reduceWElim u v w a b p ih <$> x')
 reduceWElim _ _ _ _ _ _ _ _ = error "reduceWElim"
+
+reduceQuotElim :: Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value -> Value
+reduceQuotElim _ _ _ _ _ _ f _ (VPack _ _ _ _ x) = reduceApp f x
+reduceQuotElim u v w a r p f h (VStuck x x') = VStuck (SQuotElim u v w a r p f h x) (reduceQuotElim u v w a r p f h <$> x')
+reduceQuotElim _ _ _ _ _ _ _ _ _ = error "reduceQuotElim"
