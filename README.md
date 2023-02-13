@@ -34,6 +34,8 @@ Holes
 Nat : (u : Level) -> Type u := u => ?;
 ```
 
+See [funext.txt](funext.txt) for a comprehensive example.
+
 ## Primitive types
 
 - `Empty` The type with 0 elements

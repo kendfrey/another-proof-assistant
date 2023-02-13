@@ -12,17 +12,20 @@ import Error
 import Parser
 import Quote
 import Syntax
+import System.Environment
 import Text.Megaparsec.Error
 
 main :: IO ()
 main = do
-  parsed <- parseFile "test.txt"
+  file <- head <$> getArgs
+  parsed <- parseFile file
   case parsed of
     Right program -> putStrLn (mapError id showState (runAccumT (execStateT program defaultCtx) []))
     Left err -> putStrLn (errorBundlePretty err)
 
 showState :: (Ctx, [Goal]) -> String
-showState (c, g) = showCtx False c ++ "\n\n---\n\n" ++ intercalate "\n\n" (map showGoal g)
+--showState (c, g) = showCtx False c ++ "\n\n---\n\n" ++ intercalate "\n\n" (map showGoal g)
+showState (_, g) = intercalate "\n\n" (map showGoal g)
 
 showGoal :: Goal -> String
 showGoal (n, c, a) = "?" ++ show n ++ "\n" ++ showCtx True c ++ "\n|- " ++ showValue a
