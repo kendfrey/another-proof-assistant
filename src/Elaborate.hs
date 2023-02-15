@@ -8,7 +8,7 @@ import Reduce
 import Syntax
 import Unify
 
-type Goal = (Int, Ctx, Value)
+type Goal = (String, Ctx, Value)
 
 elaborate :: MonadTrace m => Ctx -> Value -> Expr -> AccumT [Goal] m Term
 elaborate _c _a _x = trace ("\nElaborating " ++ show _x ++ " as " ++ showValue _a) $ elaborate' _c _a _x
@@ -18,10 +18,10 @@ elaborate _c _a _x = trace ("\nElaborating " ++ show _x ++ " as " ++ showValue _
     (d, n) <- getVar s c
     unify c a (defType d)
     return $ TVar s n
-  elaborate' c a Hole = do
+  elaborate' c a (Hole s) = do
     n <- looks length
-    add [(n, c, a)]
-    return $ THole n
+    add [(s, c, a)]
+    return $ THole s n
   elaborate' c a x@(App _ _) = do
     (x', a') <- infer c x
     unify c a a'
@@ -67,7 +67,7 @@ infer _c _x = trace ("\nInferring the type of " ++ show _x) $ infer' _c _x
   infer' c (Var s) = do
     (d, n) <- getVar s c
     return (TVar s n, defType d)
-  infer' _ Hole = fail "Cannot infer the type of a hole"
+  infer' _ (Hole _) = fail "Cannot infer the type of a hole"
   infer' _ (TypeOmega n) = return (TTypeOmega n, VTypeOmega (n + 1))
   infer' c (Pi s a b) = do
     (a', ta) <- elaborateType c a

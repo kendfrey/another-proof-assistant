@@ -54,7 +54,9 @@ eVar :: Parser Expr
 eVar = Var <$> identifier
 
 eHole :: Parser Expr
-eHole = Hole <$ symbol "?"
+eHole = do
+  symbol "?"
+  Hole <$> identifier
 
 ePi :: Parser Expr
 ePi = do

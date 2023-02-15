@@ -4,7 +4,7 @@ import Syntax
 
 reduce :: Env -> Term -> Value
 reduce e (TVar _ n) = e !! n
-reduce _ (THole n) = VStuck (SMVar n) Nothing
+reduce _ (THole s n) = VStuck (SMVar s n) Nothing
 reduce _ TLevel = VLevel
 reduce e (TLSucc u) = VLSucc (reduce e u)
 reduce e (TLMax u v) = VLMax (reduce e u) (reduce e v)

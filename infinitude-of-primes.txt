@@ -1,0 +1,919 @@
+-----------------------------------
+-- Misc. fundamental definitions --
+-----------------------------------
+
+  -- Congruence in function arguments
+  congr :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    (f : A -> B) ->
+    (x : A) ->
+    (y : A) ->
+      Eq u A x y -> Eq v B (f x) (f y) :=
+    u => v => A => B => f => x => y =>
+      Eq.elim u v A x (y => _ => Eq v B (f x) (f y)) (refl v B (f x)) y;
+
+  -- The non-dependent empty type eliminator
+  absurd :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type v) ->
+      Empty u -> A :=
+    u => v => A =>
+      Empty.elim u v (_ => A);
+
+  -- The non-dependent boolean eliminator
+  if :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type v) ->
+      Bool u -> A -> A -> A :=
+    u => v => A => b => x => y =>
+      Bool.elim u v (_ => A) x y b;
+
+  -- Symmetry of equality
+  symm :
+    (u : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+    (y : A) ->
+      Eq u A x y -> Eq u A y x :=
+    u => A => x => y =>
+      Eq.elim u u A x (y => _ => Eq u A y x) (refl u A x) y;
+
+  -- Transitivity of equality
+  trans :
+    (u : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+    (y : A) ->
+    (z : A) ->
+      Eq u A x y -> Eq u A y z -> Eq u A x z :=
+    u => A => x => y => z => h =>
+      Eq.elim u u A y (z => _ => Eq u A x z) h z;
+
+  -- Cast across an equality
+  cast :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Eq (lSucc u) (Type u) A B -> A -> B :=
+    u => A =>
+      Eq.elim (lSucc u) u (Type u) A (B => _ => A -> B) (x => x);
+
+  -- Eliminating a reflexive equality always gives the reflexive hypothesis
+  Eq.elimRefl :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+    (P : (y : A) -> Eq u A x y -> Type v) ->
+    (ih : P x (refl u A x)) ->
+    (h : Eq u A x x) ->
+      Eq v (P x h) ih (Eq.elim u v A x P ih x h) :=
+    u => v => A => x => P => ih => h =>
+      Eq.elim u v (Eq u A x x) (refl u A x)
+        (h => _ => Eq v (P x h) ih (Eq.elim u v A x P ih x h))
+        (refl v (P x (refl u A x)) ih)
+        h
+        (refl u (Eq u A x x) h);
+
+  -- The non-dependent sigma eliminator
+  Sigma.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (w : Level) ->
+    (A : Type u) ->
+    (B : A -> Type v) ->
+    (C : Type w) ->
+    ((x : A) -> B x -> C) ->
+      Sigma u v A B -> C :=
+    u => v => w => A => B => C =>
+      Sigma.elim u v w A B (_ => C);
+
+  -- -- Left projection of sigma TODO
+  -- fst :
+  --   (u : Level) ->
+  --   (v : Level) ->
+  --   (A : Type u) ->
+  --   (B : A -> Type v) ->
+  --     Sigma u v A B -> A :=
+  --   u => v => A => B =>
+  --     Sigma.elim u v u A B (_ => A) (x => _ => x);
+
+  -- -- Right projection of sigma TODO
+  -- snd :
+  --   (u : Level) ->
+  --   (v : Level) ->
+  --   (A : Type u) ->
+  --   (B : A -> Type v) ->
+  --     (x : Sigma u v A B) -> B (fst u v A B x) :=
+  --   u => v => A => B =>
+  --     Sigma.elim u v v A B (x => B (fst u v A B x)) (_ => y => y);
+
+  -- Computation of equality elimination into a constant type
+  Eq.elim.simpConst :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    (x : A) ->
+    (y : A) ->
+    (h : Eq u A x y) ->
+    (z : B) ->
+      Eq v B z (Eq.elim u v A x (_ => _ => B) z y h) :=
+    u => v => A => P => x => y => h => z =>
+      Eq.elim u v A x (y => h => Eq v P z (Eq.elim u v A x (_ => _ => P) z y h)) (refl v P z) y h;
+
+  -- The non-dependent quotient eliminator
+  Quot.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (w : Level) ->
+    (A : Type u) ->
+    (R : A -> A -> Type v) ->
+    (B : Type w) ->
+    (f : A -> B) ->
+    ((x : A) -> (y : A) -> (h : R x y) -> Eq w B (f x) (f y)) ->
+      Quot u v A R -> B :=
+    u => v => w => A => R => B => f => h =>
+      Quot.elim u v w A R (_ => B) f (x => y => h' =>
+        Eq.elim w w B (f x) (z => _ => Eq w B z (f y)) (h x y h')
+          (Eq.elim (lMax u v) w (Quot u v A R) (pack u v A R x) (_ => _ => B) (f x) (pack u v A R y) (Quot.sound u v A R x y h'))
+          (Eq.elim.simpConst (lMax u v) w (Quot u v A R) B (pack u v A R x) (pack u v A R y) (Quot.sound u v A R x y h') (f x)));
+
+  -- -- Axiom K TODO
+  -- reflEq :
+  --   (u : Level) ->
+  --   (A : Type u) ->
+  --   (x : A) ->
+  --   (h : Eq u A x x) ->
+  --     Eq u (Eq u A x x) (refl u A x) h :=
+  --   u => A => x => h =>
+  --     refl u (Eq u A x x) h;
+
+  -- The type has at most one element
+  IsProp :
+    (u : Level) ->
+      Type u -> Type u :=
+    u => A =>
+      (x : A) -> (y : A) -> Eq u A x y;
+
+  -----------------------------
+  -- Function extensionality --
+  -----------------------------
+
+    -- Equivalence of functions by their output
+    EquivFun :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (B : A -> Type v) ->
+      ((x : A) -> B x) ->
+      ((x : A) -> B x) ->
+        Type (lMax u v) :=
+      u => v => A => B => f => g =>
+        (x : A) -> Eq v (B x) (f x) (g x);
+
+    -- The type of functions defined to be extensional
+    ExtFun :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (A -> Type v) ->
+        Type (lMax u v) :=
+      u => v => A => B =>
+        Quot (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B);
+
+    -- Create an extensional function from a regular function
+    packFun :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (B : A -> Type v) ->
+        ((x : A) -> B x) -> ExtFun u v A B :=
+      u => v => A => B =>
+        pack (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B);
+
+    -- Create a regular function from an extensional function
+    extractFun :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (B : A -> Type v) ->
+        ExtFun u v A B -> (x : A) -> B x :=
+      u => v => A => B => f' => x =>
+        Quot.proj (lMax u v) (lMax u v) v ((x : A) -> B x) (EquivFun u v A B) (B x) (f => f x) (_ => _ => h => h x) f';
+
+    -- Dependent function extensionality
+    funExt' :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (B : A -> Type v) ->
+      (f : (x : A) -> B x) ->
+      (g : (x : A) -> B x) ->
+        EquivFun u v A B f g -> Eq (lMax u v) ((x : A) -> B x) f g :=
+      u => v => A => B => f => g => h =>
+        congr (lMax u v) (lMax u v) (ExtFun u v A B) ((x : A) -> B x) (extractFun u v A B) (packFun u v A B f) (packFun u v A B g)
+          (Quot.sound (lMax u v) (lMax u v) ((x : A) -> B x) (EquivFun u v A B) f g h);
+
+    -- Function extensionality
+    funExt :
+      (u : Level) ->
+      (v : Level) ->
+      (A : Type u) ->
+      (B : Type v) ->
+      (f : A -> B) ->
+      (g : A -> B) ->
+        EquivFun u v A (_ => B) f g -> Eq (lMax u v) (A -> B) f g :=
+      u => v => A => B =>
+        funExt' u v A (_ => B);
+
+  -- TODO
+  -- -- Functions from empty are unique
+  -- absurdityIsProp :
+  --   (u : Level) ->
+  --   (v : Level) ->
+  --   (A : Type v) ->
+  --     IsProp (lMax u v) (Empty u -> A) :=
+  --   u => v => A => f => g =>
+  --     funExt u v (Empty u) A f g (x => absurd u v (Eq v A (f x) (g x)) x);
+
+  -- Any absurdity is equal to absurd
+  absurdEq :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type v) ->
+    (f : Empty u -> A) ->
+      Eq (lMax u v) (Empty u -> A) (absurd u v A) f :=
+    u => v => A => f =>
+      funExt u v (Empty u) A (absurd u v A) f (x => absurd u v (Eq v A (absurd u v A x) (f x)) x);
+
+-------------------
+-- Product types --
+-------------------
+
+  -- The product type
+  Prod :
+    (u : Level) ->
+      Type u -> Type u -> Type u :=
+    u => A => B =>
+      Sigma u u A (_ => B);
+
+  -- The constructor
+  pair' :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      A -> B -> Prod u A B :=
+    u => A => B =>
+      pair u u A (_ => B);
+
+  -- The eliminator
+  Prod.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+    (P : Prod u A B -> Type v) ->
+    ((x : A) -> (y : B) -> P (pair' u A B x y)) ->
+      (x : Prod u A B) -> P x :=
+    u => v => A => B =>
+      Sigma.elim u u v A (_ => B);
+
+  -- The non-dependent eliminator
+  Prod.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+    (C : Type v) ->
+    (A -> B -> C) ->
+      Prod u A B -> C :=
+    u => v => A => B => C =>
+      Prod.elim u v A B (_ => C);
+
+  -- Left projection
+  fst' :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Prod u A B -> A :=
+    u => A => B =>
+      Prod.proj u u A B A (x => _ => x);
+
+  -- Right projection
+  snd' :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Prod u A B -> B :=
+    u => A => B =>
+      Prod.proj u u A B B (_ => y => y);
+
+---------------
+-- Sum types --
+---------------
+
+  -- The sum type
+  Sum :
+    (u : Level) ->
+      Type u -> Type u -> Type u :=
+    u => A => B =>
+      Sigma u u (Bool u) (b => if u (lSucc u) (Type u) b A B);
+
+  -- The left constructor
+  inl :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      A -> Sum u A B :=
+    u => A => B => a =>
+      pair u u (Bool u) (b => if u (lSucc u) (Type u) b A B) (true u) a;
+
+  -- The right constructor
+  inr :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      B -> Sum u A B :=
+    u => A => B => b =>
+      pair u u (Bool u) (b => if u (lSucc u) (Type u) b A B) (false u) b;
+
+  -- The eliminator
+  Sum.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+    (P : Sum u A B -> Type v) ->
+    ((x : A) -> P (inl u A B x)) ->
+    ((x : B) -> P (inr u A B x)) ->
+      (x : Sum u A B) -> P x :=
+    u => v => A => B => P => hl => hr =>
+      Sigma.elim u u v (Bool u) (b => if u (lSucc u) (Type u) b A B) P
+        (Bool.elim u (lMax u v)
+          (b => (x : if u (lSucc u) (Type u) b A B) -> P (pair u u (Bool u) (b => if u (lSucc u) (Type u) b A B) b x))
+          hl
+          hr
+        );
+
+-----------
+-- Logic --
+-----------
+
+  -- Logical not
+  Not :
+    (u : Level) ->
+      Type u -> Type u :=
+    u => A =>
+      A -> Empty u;
+
+  -- Logical iff
+  Iff :
+    (u : Level) ->
+      Type u -> Type u -> Type u :=
+    u => A => B =>
+      Prod u (A -> B) (B -> A);
+
+  -- Helper for proving iff
+  iffSince :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      (A -> B) -> (B -> A) -> Iff u A B :=
+    u => A => B =>
+      pair' u (A -> B) (B -> A);
+
+  -- Forward implication
+  imp :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Iff u A B -> A -> B :=
+    u => A => B =>
+      fst' u (A -> B) (B -> A);
+
+  -- Reverse implication
+  bec :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Iff u A B -> B -> A :=
+    u => A => B =>
+      snd' u (A -> B) (B -> A);
+
+------------------
+-- Decidability --
+------------------
+
+  -- Decidability
+  Dec :
+    (u : Level) ->
+      Type u -> Type u :=
+    u => A =>
+      Sum u A (Not u A);
+
+  -- The proposition is true
+  isTrue :
+    (u : Level) ->
+    (A : Type u) ->
+      A -> Dec u A :=
+    u => A =>
+      inl u A (Not u A);
+
+  -- The proposition is false
+  isFalse :
+    (u : Level) ->
+    (A : Type u) ->
+      (Not u A) -> Dec u A :=
+    u => A =>
+      inr u A (Not u A);
+
+  -- The eliminator
+  Dec.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (P : Dec u A -> Type v) ->
+    ((x : A) -> P (isTrue u A x)) ->
+    ((x : Not u A) -> P (isFalse u A x)) ->
+      (x : Dec u A) -> P x :=
+    u => v => A =>
+      Sum.elim u v A (Not u A);
+
+  -- The non-dependent eliminator
+  dif' :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    Dec u A ->
+    (A -> B) ->
+    (Not u A -> B) ->
+      B :=
+    u => v => A => B => d => h => h' =>
+      Dec.elim u v A (_ => B) h h' d;
+
+  -- Cast decidability across an iff
+  decIff :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Iff u A B -> Dec u A -> Dec u B :=
+    u => A => B => h => d =>
+      dif' u u A (Dec u B) d (h' => isTrue u B (imp u A B h h')) (h' => isFalse u B (h'' => h' (bec u A B h h'')));
+
+  -- Predicate decidability
+  DecPred :
+    (u : Level) ->
+    (A : Type u) ->
+      (A -> Type u) -> Type u :=
+    u => A => P =>
+      (x : A) -> Dec u (P x);
+
+  -- Relation decidability
+  DecRel :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      (A -> B -> Type u) -> Type u :=
+    u => A => B => R =>
+      (x : A) -> (y : B) -> Dec u (R x y);
+
+------------------
+-- Option types --
+------------------
+
+  -- The option type
+  Option :
+    (u : Level) ->
+      Type u -> Type u :=
+    u => A =>
+      Sum u (Unit u) A;
+
+  -- The nil constructor
+  none :
+    (u : Level) ->
+    (A : Type u) ->
+      Option u A :=
+    u => A =>
+      inl u (Unit u) A (star u);
+
+  -- The pure constructor
+  some :
+    (u : Level) ->
+    (A : Type u) ->
+      A -> Option u A :=
+    u => A =>
+      inr u (Unit u) A;
+
+  -- The eliminator
+  Option.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (P : Option u A -> Type v) ->
+    P (none u A) ->
+    ((x : A) -> P (some u A x)) ->
+      (x : Option u A) -> P x :=
+    u => v => A => P => h => h' =>
+      Sum.elim u v (Unit u) A P (_ => h) h';
+
+  -- The non-dependent eliminator
+  Option.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (P : Type v) ->
+    P ->
+    (A -> P) ->
+      Option u A -> P :=
+    u => v => A => P =>
+      Option.elim u v A (_ => P);
+
+  -- The option contains a value
+  IsSome :
+    (u : Level) ->
+    (A : Type u) ->
+      Option u A -> Type u :=
+    u => A =>
+      Option.proj u (lSucc u) A (Type u) (Empty u) (_ => Unit u);
+
+-----------
+-- Lists --
+-----------
+
+  -- The list type
+  List :
+    (u : Level) ->
+      Type u -> Type u :=
+    u => A =>
+      W u u (Option u A) (IsSome u A);
+
+  -- The nil constructor
+  nil :
+    (u : Level) ->
+    (A : Type u) ->
+      List u A :=
+    u => A =>
+      sup u u (Option u A) (IsSome u A) (none u A) (absurd u u (List u A));
+
+  -- The cons constructor
+  cons :
+    (u : Level) ->
+    (A : Type u) ->
+      A -> List u A -> List u A :=
+    u => A => x => xs =>
+    sup u u (Option u A) (IsSome u A) (some u A x) (_ => xs);
+
+  -- The eliminator
+  List.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (P : List u A -> Type v) ->
+    P (nil u A) ->
+    ((x : A) -> (xs : List u A) -> P xs -> P (cons u A x xs)) ->
+      (x : List u A) -> P x :=
+    u => v => A => P => h => ih =>
+      W.elim u u v (Option u A) (IsSome u A) P
+        (Option.elim u (lMax u v) A
+          (i =>
+            (f : IsSome u A i -> W u u (Option u A) (IsSome u A)) ->
+            ((j : IsSome u A i) -> P (f j)) ->
+              P (sup u u (Option u A) (IsSome u A) i f)
+          )
+          (f => _ =>
+            Eq.elim u v (Empty u -> List u A) (absurd u u (List u A)) (g => _ => P (sup u u (Option u A) (IsSome u A) (none u A) g)) h f
+              (absurdEq u u (List u A) f)
+          )
+          (x => xs => h' => ih x (xs (star u)) (h' (star u)))
+        );
+  
+  -- The non-dependent eliminator
+  fold :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    B ->
+    (A -> B -> B) ->
+      List u A -> B :=
+    u => v => A => B => h => ih =>
+      List.elim u v A (_ => B) h (x => _ => h' => ih x h');
+
+  -- List membership
+  Mem :
+    (u : Level) ->
+    (A : Type u) ->
+      A -> List u A -> Type u :=
+    u => A => x =>
+      fold u (lSucc u) A (Type u) (Empty u) (y => M => Sum u (Eq u A x y) M);
+
+---------------------
+-- Natural numbers --
+---------------------
+
+  -- The boolean is false
+  IsFalse :
+    (u : Level) ->
+      Bool u -> Type u :=
+    u => b =>
+      if u (lSucc u) (Type u) b (Empty u) (Unit u);
+
+  -- The type of natural numbers
+  Nat :
+    (u : Level) ->
+      Type u :=
+    u =>
+      W u u (Bool u) (IsFalse u);
+
+  -- The zero constructor
+  zero :
+    (u : Level) ->
+      Nat u :=
+    u =>
+      sup u u (Bool u) (IsFalse u) (true u) (absurd u u (Nat u));
+
+  -- The successor constructor
+  succ :
+    (u : Level) ->
+      Nat u -> Nat u :=
+    u => x =>
+      sup u u (Bool u) (IsFalse u) (false u) (_ => x);
+
+  -- The eliminator
+  Nat.elim :
+    (u : Level) ->
+    (v : Level) ->
+    (P : Nat u -> Type v) ->
+    P (zero u) ->
+    ((x : Nat u) -> P x -> P (succ u x)) ->
+      (x : Nat u) -> P x :=
+    u => v => P => h => ih =>
+      W.elim u u v (Bool u) (IsFalse u) P
+        (Bool.elim u (lMax u v)
+          (i => (f : IsFalse u i -> Nat u) -> ((j : IsFalse u i) -> P (f j)) -> P (sup u u (Bool u) (IsFalse u) i f))
+          (f => _ =>
+            Eq.elim u v (Empty u -> Nat u) (absurd u u (Nat u)) (g => _ => P (sup u u (Bool u) (IsFalse u) (true u) g)) h f
+              (absurdEq u u (Nat u) f)
+          )
+          (f => h' => ih (f (star u)) (h' (star u)))
+        );
+
+  -- The non-dependent eliminator
+  Nat.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type v) ->
+    A ->
+    (A -> A) ->
+      Nat u -> A :=
+    u => v => A => h => ih =>
+      Nat.elim u v (_ => A) h (_ => ih);
+
+  -- The computation rule for zero
+  elimZero :
+    (u : Level) ->
+    (v : Level) ->
+    (P : Nat u -> Type v) ->
+    (h : P (zero u)) ->
+    (ih : (x : Nat u) -> P x -> P (succ u x)) ->
+      Eq v (P (zero u)) h (Nat.elim u v P h ih (zero u)) :=
+    u => v => P => h => ih =>
+      Eq.elimRefl u v (Empty u -> Nat u) (absurd u u (Nat u)) (g => _ => P (sup u u (Bool u) (IsFalse u) (true u) g)) h
+        (absurdEq u u (Nat u) (absurd u u (Nat u)));
+
+  -- The computation rule for zero
+  projZero :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type v) ->
+    (h : A) ->
+    (ih : A -> A) ->
+      Eq v A h (Nat.proj u v A h ih (zero u)) :=
+    u => v => A => h => ih =>
+      elimZero u v (_ => A) h (_ => ih);
+
+  -- The number is zero
+  IsZero :
+    (u : Level) ->
+      Nat u -> Type u :=
+    u => 
+      Nat.proj u (lSucc u) (Type u) (Unit u) (_ => Empty u);
+
+  -- 0 is zero
+  zeroIsZero :
+    (u : Level) ->
+      IsZero u (zero u) :=
+    u =>
+      cast u (Unit u) (Nat.proj u (lSucc u) (Type u) (Unit u) (_ => Empty u) (zero u))
+        (projZero u (lSucc u) (Type u) (Unit u) (_ => Empty u)) (star u);
+
+  -- 0 ≠ succ x
+  zeroNeSucc :
+    (u : Level) ->
+    (x : Nat u) ->
+      Not u (Eq u (Nat u) (zero u) (succ u x)) :=
+    u => x =>
+      Eq.elim u u (Nat u) (zero u) (x => _ => IsZero u x) (zeroIsZero u) (succ u x);
+
+  -- 1
+  one :
+    (u : Level) ->
+      Nat u :=
+    u =>
+      succ u (zero u);
+
+  -- 2
+  two :
+    (u : Level) ->
+      Nat u :=
+    u =>
+      succ u (one u);
+
+  --------------
+  -- Addition --
+  --------------
+
+    -- Addition
+    add :
+      (u : Level) ->
+        Nat u -> Nat u -> Nat u :=
+      u => x =>
+        Nat.proj u u (Nat u) x (succ u);
+
+    -- x + 0 = x
+    addZero :
+      (u : Level) ->
+      (x : Nat u) ->
+        Eq u (Nat u) x (add u x (zero u)) :=
+      u => x =>
+        projZero u u (Nat u) x (succ u);
+
+    -- 0 + x = x
+    zeroAdd :
+      (u : Level) ->
+      (x : Nat u) ->
+        Eq u (Nat u) x (add u (zero u) x) :=
+      u =>
+        Nat.elim u u (x => Eq u (Nat u) x (add u (zero u) x)) (addZero u (zero u))
+          (x => h => congr u u (Nat u) (Nat u) (succ u) x (add u (zero u) x) h);
+
+    -- succ x + y = succ (x + y)
+    succAdd :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Eq u (Nat u) (succ u (add u x y)) (add u (succ u x) y) :=
+      u => x =>
+        Nat.elim u u (y => Eq u (Nat u) (succ u (add u x y)) (add u (succ u x) y))
+          (trans u (Nat u) (succ u (add u x (zero u))) (succ u x) (add u (succ u x) (zero u))
+            (symm u (Nat u) (succ u x) (succ u (add u x (zero u)))
+              (congr u u (Nat u) (Nat u) (succ u) x (add u x (zero u)) (addZero u x))
+            )
+            (addZero u (succ u x))
+          )
+          (y => ih => congr u u (Nat u) (Nat u) (succ u) (succ u (add u x y)) (add u (succ u x) y) ih);
+
+  --------------------
+  -- Multiplication --
+  --------------------
+
+    -- Multiplication
+    mul :
+      (u : Level) ->
+        Nat u -> Nat u -> Nat u :=
+      u => x =>
+        Nat.proj u u (Nat u) (zero u) (add u x);
+
+  --------------
+  -- Ordering --
+  --------------
+
+    -- Less than or equal to
+    Le :
+      (u : Level) ->
+        Nat u -> Nat u -> Type u :=
+      u => x => y =>
+        Sigma u u (Nat u) (z => Eq u (Nat u) y (add u x z));
+
+    -- Helper for proving ≤
+    leSince :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        (z : Nat u) -> Eq u (Nat u) y (add u x z) -> Le u x y :=
+      u => x => y =>
+        pair u u (Nat u) (z => Eq u (Nat u) y (add u x z));
+
+    -- -- TODO Reflexivity
+    -- leRefl :
+    --   (u : Level) ->
+    --   (x : Nat u) ->
+    --     Le u x x :=
+    --   u => x =>
+    --     leSince u x x (zero u) ?leRefl;--(refl u (Nat u) x);
+
+    -- 0 ≤ x
+    zeroLe :
+      (u : Level) ->
+      (x : Nat u) ->
+        Le u (zero u) x :=
+      u => x =>
+        leSince u (zero u) x x (zeroAdd u x);
+
+    -- ¬(succ x ≤ 0)
+    succNotLeZero :
+      (u : Level) ->
+      (x : Nat u) ->
+        Not u (Le u (succ u x) (zero u)) :=
+      u => x =>
+        Sigma.proj u u u (Nat u) (y => Eq u (Nat u) (zero u) (add u (succ u x) y)) (Empty u)
+          (y => Eq.elim u u (Nat u) (succ u (add u x y)) (z => _ => Eq u (Nat u) (zero u) z -> Empty u)
+            (zeroNeSucc u (add u x y))
+            (add u (succ u x) y)
+            (succAdd u x y)
+          );
+
+    -- x ≤ y ↔ succ x ≤ succ y
+    leIffSuccLeSucc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Iff u (Le u x y) (Le u (succ u x) (succ u y)) :=
+      u => x => y =>
+        iffSince u (Le u x y) (Le u (succ u x) (succ u y)) ?leIffSuccLeSucc1 ?leIffSuccLeSucc2;
+
+    -- ≤ is decidable
+    leDec :
+      (u : Level) ->
+        DecRel u (Nat u) (Nat u) (Le u) :=
+      u =>
+        Nat.elim u u (x => (y : Nat u) -> Dec u (Le u x y))
+          (x => isTrue u (Le u (zero u) x) (zeroLe u x))
+          (x => ih => Nat.elim u u (y => Dec u (Le u (succ u x) y))
+            (isFalse u (Le u (succ u x) (zero u)) (succNotLeZero u x))
+            (y => _ => decIff u (Le u x y) (Le u (succ u x) (succ u y)) (leIffSuccLeSucc u x y) (ih y))
+          );
+
+  -- Divisibility
+  Dvd :
+    (u : Level) ->
+      Nat u -> Nat u -> Type u :=
+    u => x => y =>
+      Sigma u u (Nat u) (z => Eq u (Nat u) y (mul u x z));
+
+  -- Primality
+  Prime :
+    (u : Level) ->
+      Nat u -> Type u :=
+    u => x =>
+      Prod u (Le u (two u) x) ((y : Nat u) -> Le u (two u) y -> Dvd u y x -> Eq u (Nat u) x y);
+
+  -- TODO Helper for proving primality
+  primeSince :
+    (u : Level) ->
+    (x : Nat u) ->
+      Le u (two u) x -> ((y : Nat u) -> Le u (two u) y -> Dvd u y x -> Eq u (Nat u) x y) -> Prime u x :=
+    u => x =>
+      pair' u (Le u (two u) x) ((y : Nat u) -> Le u (two u) y -> Dvd u y x -> Eq u (Nat u) x y);
+
+  -- Least number satisfying some condition
+  least :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+    DecPred u (Nat u) P ->
+    Sigma u u (Nat u) P ->
+      Sigma u u (Nat u) P :=
+    u => P => d =>
+      ?least;
+
+  -- Smallest prime factor of a number
+  minFac :
+    (u : Level) ->
+      Nat u -> Nat u :=
+    u => x =>
+      ?minFac;
+
+  -- There exists a prime not in the list
+  generateNewPrime :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+      Sigma u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))) :=
+    u => xs =>
+      ?generateNewPrime;
+
+  -- There is no finite list containing all the primes
+  infinitudeOfPrimes :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+      Not u ((x : Nat u) -> Prime u x -> Mem u (Nat u) x xs) :=
+    u => xs => h =>
+      Sigma.proj u u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))) (Empty u)
+        (x => Prod.proj u u (Prime u x) (Not u (Mem u (Nat u) x xs)) (Empty u) (h' => h'' => h'' (h x h')))
+        (generateNewPrime u xs);

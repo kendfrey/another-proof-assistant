@@ -5,7 +5,7 @@ const : (u : Level) -> (A : Type u) -> A -> A -> A :=
 	_ => _ => x => _ => x;
 
 quoteClosureTest : (u : Level) -> (A : Type u) -> (x : A) -> (P : (A -> A) -> Type u) -> P (const u A x) :=
-	u => A => test => P => ?;
+	u => A => test => P => ?quoteClosureTest;
 
 fst : (u : Level) -> (v : Level) -> (A : Type u) -> (B : A -> Type v) -> Sigma u v A B -> A :=
   u => v => A => B => Sigma.elim u v u A B (_ => A) (x => _ => x);
@@ -70,3 +70,6 @@ Nat.elim : (u : Level) -> (v : Level) -> (P : Nat u -> Type v) -> P (zero u) -> 
       (f => h' => Eq.elim u v (Empty u -> Nat u) (absurd u u (Nat u)) (y => _ => P (sup u u (Bool u) (IsFalse u) (true u) y)) h f (absurdIsProp u u (Nat u) (absurd u u (Nat u)) f))
       (f => h' => ih (f (star u)) (h' (star u)))
     );
+
+elimReflexiveNonReflTest : (u : Level) -> (A : Type u) -> (B : Type u) -> (x : B) -> Eq u B x (Eq.elim u u (A -> A) (x => x) (_ => _ => B) x (x => x) (funExt u u A A (x => x) (x => x) (refl u A))) :=
+  u => A => B => x => Eq.elim u u (Eq u (A -> A) (x => x) (x => x)) (refl u (A -> A) (x => x)) (h => _ => Eq u B x (Eq.elim u u (A -> A) (x => x) (_ => _ => B) x (x => x) h)) (refl u B x) (funExt u u A A (x => x) (x => x) (x => refl u A x)) (refl u (Eq u (A -> A) (x => x) (x => x)) (refl u (A -> A) (x => x)));

@@ -31,7 +31,7 @@ id : (u : Level) -> (A : Type u) -> A -> A := _ => _ => x => x;
 Holes
 
 ```hs
-Nat : (u : Level) -> Type u := u => ?;
+Nat : (u : Level) -> Type u := u => ?TODO;
 ```
 
 See [funext.txt](funext.txt) for a comprehensive example.

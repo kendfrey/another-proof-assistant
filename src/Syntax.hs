@@ -13,7 +13,7 @@ import Prelude hiding (pi)
 
 data Expr
   = Var String
-  | Hole
+  | Hole String
   | TypeOmega Int
   | Pi String Expr Expr
   | Lam String Expr
@@ -37,7 +37,7 @@ instance Show Expr where
     where
     showExpr :: Precedence -> Expr -> String
     showExpr _ (Var s) = s
-    showExpr _ Hole = "?"
+    showExpr _ (Hole s) = "?" ++ s
     showExpr _ (TypeOmega 0) = "Typew"
     showExpr _ (TypeOmega n) = "Typew+" ++ show n
     showExpr p (Pi "_" a b) = parens p PPi $ showExpr (pred PPi) a ++ " -> " ++ showExpr PPi b
@@ -50,7 +50,7 @@ instance Show Expr where
 
 data Term
   = TVar String Int
-  | THole Int
+  | THole String Int
   | TLevel
   | TLSucc Term
   | TLMax Term Term
@@ -111,7 +111,7 @@ data Value
 
 data Stuck
   = SVar String Int
-  | SMVar Int
+  | SMVar String Int
   | SApp Stuck Value
   | SSigmaElim Value Value Value Value Value Value Value Stuck
   | SEqElim Value Value Value Value Value Value Value Stuck

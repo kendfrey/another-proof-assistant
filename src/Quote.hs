@@ -30,7 +30,7 @@ quote (VPack u v a r x) = App (App (App (App (App (Var vPack) (quote u)) (quote 
 
 quoteStuck :: Stuck -> Expr
 quoteStuck (SVar s _) = Var s
-quoteStuck (SMVar _) = Hole
+quoteStuck (SMVar s _) = Hole s
 quoteStuck (SApp f x) = App (quoteStuck f) (quote x)
 quoteStuck (SSigmaElim u v w a b p ih x) = App (App (App (App (App (App (App (App (Var vSigmaElim) (quote u)) (quote v)) (quote w)) (quote a)) (quote b)) (quote p)) (quote ih)) (quoteStuck x)
 quoteStuck (SEqElim u v a x p ih y h) = App (App (App (App (App (App (App (App (Var vEqElim) (quote u)) (quote v)) (quote a)) (quote x)) (quote p)) (quote ih)) (quote y)) (quoteStuck h)

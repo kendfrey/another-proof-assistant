@@ -28,7 +28,7 @@ showState :: (Ctx, [Goal]) -> String
 showState (_, g) = intercalate "\n\n" (map showGoal g)
 
 showGoal :: Goal -> String
-showGoal (n, c, a) = "?" ++ show n ++ "\n" ++ showCtx True c ++ "\n|- " ++ showValue a
+showGoal (s, c, a) = "?" ++ s ++ "\n" ++ showCtx True c ++ "\n|- " ++ showValue a
 
 showCtx :: Bool -> Ctx -> String
 showCtx local = intercalate "\n" . reverse . map (showDef local) . filter ((not local ||) . defLocal)

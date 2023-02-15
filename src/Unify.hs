@@ -83,7 +83,7 @@ unifyStuck _c _x _y = trace ("\nUnifying " ++ showStuck _x ++ " and " ++ showStu
   where
   unifyStuck' :: MonadTrace m => Ctx -> Stuck -> Stuck -> m ()
   unifyStuck' _ (SVar _ x) (SVar _ y) | x == y = return ()
-  unifyStuck' _ (SMVar x) (SMVar y) | x == y = return ()
+  unifyStuck' _ (SMVar _ x) (SMVar _ y) | x == y = return ()
   unifyStuck' c (SApp f x) (SApp g y) = do
     unifyStuck c f g
     unify c x y
