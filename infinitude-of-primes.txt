@@ -93,26 +93,6 @@
     u => v => w => A => B => C =>
       Sigma.elim u v w A B (_ => C);
 
-  -- -- Left projection of sigma TODO
-  -- fst :
-  --   (u : Level) ->
-  --   (v : Level) ->
-  --   (A : Type u) ->
-  --   (B : A -> Type v) ->
-  --     Sigma u v A B -> A :=
-  --   u => v => A => B =>
-  --     Sigma.elim u v u A B (_ => A) (x => _ => x);
-
-  -- -- Right projection of sigma TODO
-  -- snd :
-  --   (u : Level) ->
-  --   (v : Level) ->
-  --   (A : Type u) ->
-  --   (B : A -> Type v) ->
-  --     (x : Sigma u v A B) -> B (fst u v A B x) :=
-  --   u => v => A => B =>
-  --     Sigma.elim u v v A B (x => B (fst u v A B x)) (_ => y => y);
-
   -- Computation of equality elimination into a constant type
   Eq.elim.simpConst :
     (u : Level) ->
@@ -143,23 +123,6 @@
         Eq.elim w w B (f x) (z => _ => Eq w B z (f y)) (h x y h')
           (Eq.elim (lMax u v) w (Quot u v A R) (pack u v A R x) (_ => _ => B) (f x) (pack u v A R y) (Quot.sound u v A R x y h'))
           (Eq.elim.simpConst (lMax u v) w (Quot u v A R) B (pack u v A R x) (pack u v A R y) (Quot.sound u v A R x y h') (f x)));
-
-  -- -- Axiom K TODO
-  -- reflEq :
-  --   (u : Level) ->
-  --   (A : Type u) ->
-  --   (x : A) ->
-  --   (h : Eq u A x x) ->
-  --     Eq u (Eq u A x x) (refl u A x) h :=
-  --   u => A => x => h =>
-  --     refl u (Eq u A x x) h;
-
-  -- The type has at most one element
-  IsProp :
-    (u : Level) ->
-      Type u -> Type u :=
-    u => A =>
-      (x : A) -> (y : A) -> Eq u A x y;
 
   -----------------------------
   -- Function extensionality --
@@ -232,16 +195,6 @@
       u => v => A => B =>
         funExt' u v A (_ => B);
 
-  -- TODO
-  -- -- Functions from empty are unique
-  -- absurdityIsProp :
-  --   (u : Level) ->
-  --   (v : Level) ->
-  --   (A : Type v) ->
-  --     IsProp (lMax u v) (Empty u -> A) :=
-  --   u => v => A => f => g =>
-  --     funExt u v (Empty u) A f g (x => absurd u v (Eq v A (f x) (g x)) x);
-
   -- Any absurdity is equal to absurd
   absurdEq :
     (u : Level) ->
@@ -297,7 +250,7 @@
       Prod.elim u v A B (_ => C);
 
   -- Left projection
-  fst' :
+  fst :
     (u : Level) ->
     (A : Type u) ->
     (B : Type u) ->
@@ -306,7 +259,7 @@
       Prod.proj u u A B A (x => _ => x);
 
   -- Right projection
-  snd' :
+  snd :
     (u : Level) ->
     (A : Type u) ->
     (B : Type u) ->
@@ -361,6 +314,19 @@
           hr
         );
 
+  -- The non-dependent eliminator
+  Sum.proj :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+    (C : Type v) ->
+    (A -> C) ->
+    (B -> C) ->
+      Sum u A B -> C :=
+    u => v => A => B => C =>
+      Sum.elim u v A B (_ => C);
+
 -----------
 -- Logic --
 -----------
@@ -395,7 +361,7 @@
     (B : Type u) ->
       Iff u A B -> A -> B :=
     u => A => B =>
-      fst' u (A -> B) (B -> A);
+      fst u (A -> B) (B -> A);
 
   -- Reverse implication
   bec :
@@ -404,7 +370,7 @@
     (B : Type u) ->
       Iff u A B -> B -> A :=
     u => A => B =>
-      snd' u (A -> B) (B -> A);
+      snd u (A -> B) (B -> A);
 
 ------------------
 -- Decidability --
@@ -446,7 +412,7 @@
       Sum.elim u v A (Not u A);
 
   -- The non-dependent eliminator
-  dif' :
+  dif :
     (u : Level) ->
     (v : Level) ->
     (A : Type u) ->
@@ -458,6 +424,38 @@
     u => v => A => B => d => h => h' =>
       Dec.elim u v A (_ => B) h h' d;
 
+  -- The true computational rule for non-conditional dif
+  difTrue :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    (d : Dec u A) ->
+    (h : B) ->
+    (h' : B) ->
+      A -> Eq v B h (dif u v A B d (_ => h) (_ => h')) :=
+    u => v => A => B => d => h => h' => h'' =>
+      Dec.elim u v A (d => Eq v B h (dif u v A B d (_ => h) (_ => h')))
+        (_ => refl v B h)
+        (h''' => Empty.elim u v (_ => Eq v B h (dif u v A B (isFalse u A h''') (_ => h) (_ => h'))) (h''' h''))
+        d;
+
+  -- The false computational rule for non-conditional dif
+  difFalse :
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    (d : Dec u A) ->
+    (h : B) ->
+    (h' : B) ->
+      Not u A -> Eq v B h' (dif u v A B d (_ => h) (_ => h')) :=
+    u => v => A => B => d => h => h' => h'' =>
+      Dec.elim u v A (d => Eq v B h' (dif u v A B d (_ => h) (_ => h')))
+        (h''' => Empty.elim u v (_ => Eq v B h' (dif u v A B (isTrue u A h''') (_ => h) (_ => h'))) (h'' h'''))
+        (_ => refl v B h')
+        d;
+
   -- Cast decidability across an iff
   decIff :
     (u : Level) ->
@@ -465,7 +463,22 @@
     (B : Type u) ->
       Iff u A B -> Dec u A -> Dec u B :=
     u => A => B => h => d =>
-      dif' u u A (Dec u B) d (h' => isTrue u B (imp u A B h h')) (h' => isFalse u B (h'' => h' (bec u A B h h'')));
+      dif u u A (Dec u B) d (h' => isTrue u B (imp u A B h h')) (h' => isFalse u B (h'' => h' (bec u A B h h'')));
+
+  -- Decidability of a product
+  decProd :
+    (u : Level) ->
+    (A : Type u) ->
+    (B : Type u) ->
+      Dec u A -> Dec u B -> Dec u (Prod u A B) :=
+    u => A => B => d =>
+      dif u u A (Dec u B -> Dec u (Prod u A B)) d
+        (h => d' =>
+          dif u u B (Dec u (Prod u A B)) d'
+            (h' => isTrue u (Prod u A B) (pair' u A B h h'))
+            (h' => isFalse u (Prod u A B) (Prod.proj u u A B (Empty u) (_ => h'' => h' h'')))
+        )
+        (h => _ => isFalse u (Prod u A B) (Prod.proj u u A B (Empty u) (h' => _ => h h')));
 
   -- Predicate decidability
   DecPred :
@@ -606,6 +619,77 @@
     u => v => A => B => h => ih =>
       List.elim u v A (_ => B) h (x => _ => h' => ih x h');
 
+  -- The computational rule for nil
+  elimNil : 
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (P : List u A -> Type v) ->
+    (h : P (nil u A)) ->
+    (ih : (x : A) -> (xs : List u A) -> P xs -> P (cons u A x xs)) ->
+      Eq v (P (nil u A)) h (List.elim u v A P h ih (nil u A)) :=
+    u => v => A => P => h => ih =>
+      Eq.elimRefl u v (Empty u -> List u A) (absurd u u (List u A))
+        (g => _ => P (sup u u (Option u A) (IsSome u A) (none u A) g))
+        h
+        (absurdEq u u (List u A) (absurd u u (List u A)));
+
+  -- The computational rule for nil
+  foldNil : 
+    (u : Level) ->
+    (v : Level) ->
+    (A : Type u) ->
+    (B : Type v) ->
+    (h : B) ->
+    (ih : A -> B -> B) ->
+      Eq v B h (fold u v A B h ih (nil u A)) :=
+    u => v => A => B => h => ih =>
+      elimNil u v A (_ => B) h (x => _ => h' => ih x h');
+
+  -- Filter
+  filter :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    DecPred u A P ->
+      List u A -> List u A :=
+    u => A => P => d =>
+      fold u u A (List u A) (nil u A) (x => xs => dif u u (P x) (List u A) (d x) (_ => cons u A x xs) (_ => xs));
+
+  -- Filtering nil is nil
+  filterNil :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    (d : DecPred u A P) ->
+      Eq u (List u A) (nil u A) (filter u A P d (nil u A)) :=
+    u => A => P => d =>
+      foldNil u u A (List u A) (nil u A) (x => xs => dif u u (P x) (List u A) (d x) (_ => cons u A x xs) (_ => xs));
+
+  -- Filtering a matching element
+  filterConsTrue :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    (d : DecPred u A P) ->
+    (x : A) ->
+    (xs : List u A) ->
+      P x -> Eq u (List u A) (cons u A x (filter u A P d xs)) (filter u A P d (cons u A x xs)) :=
+    u => A => P => d => x => xs =>
+      difTrue u u (P x) (List u A) (d x) (cons u A x (filter u A P d xs)) (filter u A P d xs);
+
+  -- Filtering a non-matching element
+  filterConsFalse :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    (d : DecPred u A P) ->
+    (x : A) ->
+    (xs : List u A) ->
+      Not u (P x) -> Eq u (List u A) (filter u A P d xs) (filter u A P d (cons u A x xs)) :=
+    u => A => P => d => x => xs =>
+      difFalse u u (P x) (List u A) (d x) (cons u A x (filter u A P d xs)) (filter u A P d xs);
+
   -- List membership
   Mem :
     (u : Level) ->
@@ -613,6 +697,78 @@
       A -> List u A -> Type u :=
     u => A => x =>
       fold u (lSucc u) A (Type u) (Empty u) (y => M => Sum u (Eq u A x y) M);
+
+  -- Membership of cons from the head
+  memConsHead :
+    (u : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+    (xs : List u A) ->
+      Mem u A x (cons u A x xs) :=
+    u => A => x => xs =>
+      inl u (Eq u A x x) (Mem u A x xs) (refl u A x);
+
+  -- Membership of cons from the tail
+  memConsTail :
+    (u : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+    (y : A) ->
+    (xs : List u A) ->
+      Mem u A x xs -> Mem u A x (cons u A y xs) :=
+    u => A => x => y => xs => h =>
+      inr u (Eq u A x y) (Mem u A x xs) h;
+
+  -- Membership of nil
+  memNil :
+    (u : Level) ->
+    (A : Type u) ->
+    (x : A) ->
+      Not u (Mem u A x (nil u A)) :=
+    u => A => x =>
+      Eq.elim (lSucc u) u (Type u) (Empty u) (B => _ => Not u B) (x => x) (Mem u A x (nil u A))
+        (foldNil u (lSucc u) A (Type u) (Empty u) (y => M => Sum u (Eq u A x y) M));
+
+  -- Membership of a filtered cons
+  memFilterCons :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    (d : DecPred u A P) ->
+    (x : A) ->
+    (y : A) ->
+    (xs : List u A) ->
+      Mem u A x (filter u A P d xs) -> Mem u A x (filter u A P d (cons u A y xs)) :=
+    u => A => P => d => x => y => xs => h =>
+      Dec.elim u u (P y) (d' => Mem u A x (dif u u (P y) (List u A) d' (_ => cons u A y (filter u A P d xs)) (_ => filter u A P d xs)))
+      (_ => memConsTail u A x y (filter u A P d xs) h)
+      (_ => h)
+      (d y);
+
+  -- Membership of a filtered list
+  memFilter :
+    (u : Level) ->
+    (A : Type u) ->
+    (P : A -> Type u) ->
+    (d : DecPred u A P) ->
+    (xs : List u A) ->
+    (x : A) ->
+      P x -> Mem u A x xs -> Mem u A x (filter u A P d xs) :=
+    u => A => P => d => xs => x => h =>
+      List.elim u u A (xs => Mem u A x xs -> Mem u A x (filter u A P d xs))
+        (h' => Empty.elim u u (_ => Mem u A x (filter u A P d (nil u A))) (memNil u A x h'))
+        (y => xs => ih => Sum.proj u u (Eq u A x y) (Mem u A x xs) (Mem u A x (filter u A P d (cons u A y xs)))
+          (Eq.elim u u A x (y => _ => Mem u A x (filter u A P d (cons u A y xs)))
+            (Eq.elim u u (List u A) (cons u A x (filter u A P d xs)) (xs => _ => Mem u A x xs)
+              (memConsHead u A x (filter u A P d xs))
+              (filter u A P d (cons u A x xs))
+              (filterConsTrue u A P d x xs h)
+            )
+            y
+          )
+          (h => memFilterCons u A P d x y xs (ih h))
+        )
+        xs;
 
 ---------------------
 -- Natural numbers --
@@ -699,6 +855,43 @@
     u => v => A => h => ih =>
       elimZero u v (_ => A) h (_ => ih);
 
+  -- Double eliminator
+  Nat.elim2 :
+    (u : Level) ->
+    (v : Level) ->
+    (P : Nat u -> Nat u -> Type v) ->
+    P (zero u) (zero u) ->
+    ((x : Nat u) -> P x (zero u) -> P (succ u x) (zero u)) ->
+    ((y : Nat u) -> P (zero u) y -> P (zero u) (succ u y)) ->
+    ((x : Nat u) -> (y : Nat u) -> P x y -> P (succ u x) (succ u y)) ->
+      (x : Nat u) -> (y : Nat u) -> P x y :=
+    u => v => P => h => h' => h'' => ih =>
+      Nat.elim u (lMax u v) (x => (y : Nat u) -> P x y)
+        (Nat.elim u v (y => P (zero u) y) h h'')
+        (x => ih' => Nat.elim u v (y => P (succ u x) y) (h' x (ih' (zero u))) (y => _ => ih x y (ih' y)));
+
+  -- The computation rule for zero
+  elim2Zero :
+    (u : Level) ->
+    (v : Level) ->
+    (P : Nat u -> Nat u -> Type v) ->
+    (h : P (zero u) (zero u)) ->
+    (h' : (x : Nat u) -> P x (zero u) -> P (succ u x) (zero u)) ->
+    (h'' : (y : Nat u) -> P (zero u) y -> P (zero u) (succ u y)) ->
+    (ih : (x : Nat u) -> (y : Nat u) -> P x y -> P (succ u x) (succ u y)) ->
+      Eq v (P (zero u) (zero u)) h (Nat.elim2 u v P h h' h'' ih (zero u) (zero u)) :=
+    u => v => P => h => h' => h'' => ih =>
+      trans v (P (zero u) (zero u)) h ((Nat.elim u v (y => P (zero u) y) h h'') (zero u)) (Nat.elim2 u v P h h' h'' ih (zero u) (zero u))
+        (elimZero u v (y => P (zero u) y) h h'')
+        (congr (lMax u v) v ((x : Nat u) -> P (zero u) x) (P (zero u) (zero u)) (f => f (zero u))
+          (Nat.elim u v (y => P (zero u) y) h h'')
+          (Nat.elim2 u v P h h' h'' ih (zero u))
+          (elimZero u (lMax u v) (x => (y : Nat u) -> P x y)
+            (Nat.elim u v (y => P (zero u) y) h h'')
+            (x => ih' => Nat.elim u v (y => P (succ u x) y) (h' x (ih' (zero u))) (y => _ => ih x y (ih' y)))
+          )
+        );
+
   -- The number is zero
   IsZero :
     (u : Level) ->
@@ -721,6 +914,76 @@
       Not u (Eq u (Nat u) (zero u) (succ u x)) :=
     u => x =>
       Eq.elim u u (Nat u) (zero u) (x => _ => IsZero u x) (zeroIsZero u) (succ u x);
+
+  -- succ x ≠ 0
+  succNeZero :
+    (u : Level) ->
+    (x : Nat u) ->
+      Not u (Eq u (Nat u) (succ u x) (zero u)) :=
+    u => x => h =>
+      zeroNeSucc u x (symm u (Nat u) (succ u x) (zero u) h);
+
+  -- Equivalent form of equality used for proving injectivity of succ
+  SuccEq :
+    (u : Level) ->
+      Nat u -> Nat u -> Type u :=
+    u =>
+      Nat.elim2 u (lSucc u) (_ => _ => Type u)
+        (Unit u)
+        (_ => _ => Empty u)
+        (_ => _ => Empty u)
+        (x => y => _ => Eq u (Nat u) x y);
+
+  -- The computation rule for zero
+  succEqZero :
+    (u : Level) ->
+      Eq (lSucc u) (Type u) (Unit u) (SuccEq u (zero u) (zero u)) :=
+    u =>
+      elim2Zero u (lSucc u) (_ => _ => Type u)
+        (Unit u)
+        (_ => _ => Empty u)
+        (_ => _ => Empty u)
+        (x => y => _ => Eq u (Nat u) x y);
+
+  -- Create a SuccEq
+  succEqOfEq :
+    (u : Level) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+      Eq u (Nat u) x y -> SuccEq u x y :=
+    u => x => y =>
+      Eq.elim u u (Nat u) x (y => _ => SuccEq u x y)
+        (Nat.elim u u (x => SuccEq u x x)
+          (cast u (Unit u) (SuccEq u (zero u) (zero u)) (succEqZero u) (star u))
+          (x => _ => refl u (Nat u) x)
+          x
+        )
+        y;
+
+  -- succ is injective
+  succInj :
+    (u : Level) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+      Eq u (Nat u) (succ u x) (succ u y) -> Eq u (Nat u) x y :=
+    u => x => y =>
+      succEqOfEq u (succ u x) (succ u y);
+
+  -- Decidability
+  decEq :
+    (u : Level) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+      Dec u (Eq u (Nat u) x y) :=
+    u =>
+      Nat.elim2 u u (x => y => Dec u (Eq u (Nat u) x y))
+        (isTrue u (Eq u (Nat u) (zero u) (zero u)) (refl u (Nat u) (zero u)))
+        (x => _ => isFalse u (Eq u (Nat u) (succ u x) (zero u)) (succNeZero u x))
+        (y => _ => isFalse u (Eq u (Nat u) (zero u) (succ u y)) (zeroNeSucc u y))
+        (x => y => d => dif u u (Eq u (Nat u) x y) (Dec u (Eq u (Nat u) (succ u x) (succ u y))) d
+          (h => isTrue u (Eq u (Nat u) (succ u x) (succ u y)) (congr u u (Nat u) (Nat u) (succ u) x y h))
+          (h => isFalse u (Eq u (Nat u) (succ u x) (succ u y)) (h' => h (succInj u x y h')))
+        );
 
   -- 1
   one :
@@ -780,6 +1043,72 @@
           )
           (y => ih => congr u u (Nat u) (Nat u) (succ u) (succ u (add u x y)) (add u (succ u x) y) ih);
 
+    -- Associativity
+    addAssoc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Eq u (Nat u) (add u (add u x y) z) (add u x (add u y z)) :=
+      u => x => y =>
+        Nat.elim u u (z => Eq u (Nat u) (add u (add u x y) z) (add u x (add u y z)))
+          (trans u (Nat u) (add u (add u x y) (zero u)) (add u x y) (add u x (add u y (zero u)))
+            (symm u (Nat u) (add u x y) (add u (add u x y) (zero u)) (addZero u (add u x y)))
+            (congr u u (Nat u) (Nat u) (add u x) y (add u y (zero u)) (addZero u y))
+          )
+          (z => ih => congr u u (Nat u) (Nat u) (succ u) (add u (add u x y) z) (add u x (add u y z)) ih);
+
+    -- Commutativity
+    addComm :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Eq u (Nat u) (add u x y) (add u y x) :=
+      u => x =>
+        Nat.elim u u (y => Eq u (Nat u) (add u x y) (add u y x))
+          (trans u (Nat u) (add u x (zero u)) x (add u (zero u) x) (symm u (Nat u) x (add u x (zero u)) (addZero u x)) (zeroAdd u x))
+          (y => ih => trans u (Nat u) (succ u (add u x y)) (succ u (add u y x)) (add u (succ u y) x)
+            (congr u u (Nat u) (Nat u) (succ u) (add u x y) (add u y x) ih)
+            (succAdd u y x)
+          );
+
+    -- Left injectivity
+    addInjLeft :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Eq u (Nat u) (add u x z) (add u y z) -> Eq u (Nat u) x y :=
+      u => x => y =>
+        Nat.elim u u (z => Eq u (Nat u) (add u x z) (add u y z) -> Eq u (Nat u) x y)
+          (h => trans u (Nat u) x (add u x (zero u)) y (addZero u x) (trans u (Nat u) (add u x (zero u)) (add u y (zero u)) y h
+            (symm u (Nat u) y (add u y (zero u)) (addZero u y))
+          ))
+          (z => ih => h => ih (succInj u (add u x z) (add u y z) h));
+
+    -- Right injectivity
+    addInjRight :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Eq u (Nat u) (add u x y) (add u x z) -> Eq u (Nat u) y z :=
+      u => x => y => z => h =>
+        addInjLeft u y z x (trans u (Nat u) (add u y x) (add u x y) (add u z x) (addComm u y x)
+          (trans u (Nat u) (add u x y) (add u x z) (add u z x) h (addComm u x z))
+        );
+
+    -- x + y = 0 → y = 0
+    addZeroRight :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Eq u (Nat u) (zero u) (add u x y) -> Eq u (Nat u) (zero u) y :=
+      u => x =>
+        Nat.elim u u (y => Eq u (Nat u) (zero u) (add u x y) -> Eq u (Nat u) (zero u) y)
+          (_ => refl u (Nat u) (zero u))
+          (y => _ => h => absurd u u (Eq u (Nat u) (zero u) (succ u y)) (zeroNeSucc u (add u x y) h));
+
   --------------------
   -- Multiplication --
   --------------------
@@ -790,6 +1119,133 @@
         Nat u -> Nat u -> Nat u :=
       u => x =>
         Nat.proj u u (Nat u) (zero u) (add u x);
+
+    -- x * 0 = 0
+    mulZero :
+      (u : Level) ->
+      (x : Nat u) ->
+        Eq u (Nat u) (zero u) (mul u x (zero u)) :=
+      u => x =>
+        projZero u u (Nat u) (zero u) (add u x);
+
+    -- 0 * x = 0
+    zeroMul :
+      (u : Level) ->
+      (x : Nat u) ->
+        Eq u (Nat u) (zero u) (mul u (zero u) x) :=
+      u =>
+        Nat.elim u u (x => Eq u (Nat u) (zero u) (mul u (zero u) x)) (mulZero u (zero u))
+          (x => ih => trans u (Nat u) (zero u) (add u (zero u) (zero u)) (add u (zero u) (mul u (zero u) x))
+            (addZero u (zero u))
+            (congr u u (Nat u) (Nat u) (x => add u (zero u) x) (zero u) (mul u (zero u) x) ih)
+          );
+
+    -- x * 1 = x
+    mulOne :
+      (u : Level) ->
+      (x : Nat u) ->
+        Eq u (Nat u) x (mul u x (one u)) :=
+      u => x =>
+        trans u (Nat u) x (add u x (zero u)) (mul u x (one u))
+          (addZero u x)
+          (congr u u (Nat u) (Nat u) (add u x) (zero u) (mul u x (zero u)) (mulZero u x));
+
+    -- succ x * y = y + x * y
+    succMul :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Eq u (Nat u) (mul u (succ u x) y) (add u y (mul u x y)) :=
+      u => x =>
+        Nat.elim u u (y => Eq u (Nat u) (mul u (succ u x) y) (add u y (mul u x y)))
+          (trans u (Nat u) (mul u (succ u x) (zero u)) (zero u) (add u (zero u) (mul u x (zero u)))
+            (symm u (Nat u) (zero u) (mul u (succ u x) (zero u)) (mulZero u (succ u x)))
+            (trans u (Nat u) (zero u) (mul u x (zero u)) (add u (zero u) (mul u x (zero u)))
+              (mulZero u x)
+              (zeroAdd u (mul u x (zero u)))
+            )
+          )
+          (y => ih => trans u (Nat u) (add u (succ u x) (mul u (succ u x) y)) (add u (succ u x) (add u y (mul u x y))) (add u (succ u y) (add u x (mul u x y)))
+            (congr u u (Nat u) (Nat u) (add u (succ u x)) (mul u (succ u x) y) (add u y (mul u x y)) ih)
+            (trans u (Nat u) (add u (succ u x) (add u y (mul u x y))) (add u (add u (succ u x) y) (mul u x y)) (add u (succ u y) (add u x (mul u x y)))
+              (symm u (Nat u) (add u (add u (succ u x) y) (mul u x y)) (add u (succ u x) (add u y (mul u x y))) (addAssoc u (succ u x) y (mul u x y)))
+              (trans u (Nat u) (add u (add u (succ u x) y) (mul u x y)) (add u (add u (succ u y) x) (mul u x y)) (add u (succ u y) (add u x (mul u x y)))
+                (congr u u (Nat u) (Nat u) (z => add u z (mul u x y)) (add u (succ u x) y) (add u (succ u y) x)
+                  (trans u (Nat u) (add u (succ u x) y) (succ u (add u x y)) (add u (succ u y) x)
+                    (symm u (Nat u) (succ u (add u x y)) (add u (succ u x) y) (succAdd u x y))
+                    (addComm u x (succ u y))
+                  )
+                )
+                (addAssoc u (succ u y) x (mul u x y))
+              )
+            )
+          );
+
+    -- Left distributivity
+    leftDistrib :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Eq u (Nat u) (add u (mul u x y) (mul u x z)) (mul u x (add u y z)) :=
+      u => x => y =>
+        Nat.elim u u (z => Eq u (Nat u) (add u (mul u x y) (mul u x z)) (mul u x (add u y z)))
+          (trans u (Nat u) (add u (mul u x y) (mul u x (zero u))) (add u (mul u x y) (zero u)) (mul u x (add u y (zero u)))
+            (congr u u (Nat u) (Nat u) (add u (mul u x y)) (mul u x (zero u)) (zero u) (symm u (Nat u) (zero u) (mul u x (zero u)) (mulZero u x)))
+            (trans u (Nat u) (add u (mul u x y) (zero u)) (mul u x y) (mul u x (add u y (zero u)))
+              (symm u (Nat u) (mul u x y) (add u (mul u x y) (zero u)) (addZero u (mul u x y)))
+              (congr u u (Nat u) (Nat u) (mul u x) y (add u y (zero u)) (addZero u y))
+            )
+          )
+          (z => ih => trans u (Nat u) (add u (mul u x y) (add u x (mul u x z))) (add u (add u x (mul u x z)) (mul u x y)) (add u x (mul u x (add u y z)))
+            (addComm u (mul u x y) (add u x (mul u x z)))
+            (trans u (Nat u) (add u (add u x (mul u x z)) (mul u x y)) (add u x (add u (mul u x z) (mul u x y))) (add u x (mul u x (add u y z)))
+              (addAssoc u x (mul u x z) (mul u x y))
+              (congr u u (Nat u) (Nat u) (add u x) (add u (mul u x z) (mul u x y)) (mul u x (add u y z))
+                (trans u (Nat u) (add u (mul u x z) (mul u x y)) (add u (mul u x y) (mul u x z)) (mul u x (add u y z))
+                  (addComm u (mul u x z) (mul u x y))
+                  ih
+                )
+              )
+            )
+          );
+
+    -- Associativity
+    mulAssoc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Eq u (Nat u) (mul u (mul u x y) z) (mul u x (mul u y z)) :=
+      u => x => y =>
+        Nat.elim u u (z => Eq u (Nat u) (mul u (mul u x y) z) (mul u x (mul u y z)))
+          (trans u (Nat u) (mul u (mul u x y) (zero u)) (zero u) (mul u x (mul u y (zero u)))
+            (symm u (Nat u) (zero u) (mul u (mul u x y) (zero u)) (mulZero u (mul u x y)))
+            (trans u (Nat u) (zero u) (mul u x (zero u)) (mul u x (mul u y (zero u))) (mulZero u x)
+              (congr u u (Nat u) (Nat u) (mul u x) (zero u) (mul u y (zero u)) (mulZero u y))
+            )
+          )
+          (z => ih => trans u (Nat u) (add u (mul u x y) (mul u (mul u x y) z)) (add u (mul u x y) (mul u x (mul u y z))) (mul u x (add u y (mul u y z)))
+            (congr u u (Nat u) (Nat u) (add u (mul u x y)) (mul u (mul u x y) z) (mul u x (mul u y z)) ih)
+            (leftDistrib u x y (mul u y z))
+          );
+
+    -- Commutativity
+    mulComm :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Eq u (Nat u) (mul u x y) (mul u y x) :=
+      u =>
+        Nat.elim u u (x => (y : Nat u) -> Eq u (Nat u) (mul u x y) (mul u y x))
+          (x => trans u (Nat u) (mul u (zero u) x) (zero u) (mul u x (zero u))
+            (symm u (Nat u) (zero u) (mul u (zero u) x) (zeroMul u x))
+            (mulZero u x)
+          )
+          (x => ih => y => trans u (Nat u) (mul u (succ u x) y) (add u y (mul u x y)) (add u y (mul u y x))
+            (succMul u x y)
+            (congr u u (Nat u) (Nat u) (add u y) (mul u x y) (mul u y x) (ih y))
+          );
 
   --------------
   -- Ordering --
@@ -811,13 +1267,17 @@
       u => x => y =>
         pair u u (Nat u) (z => Eq u (Nat u) y (add u x z));
 
-    -- -- TODO Reflexivity
-    -- leRefl :
-    --   (u : Level) ->
-    --   (x : Nat u) ->
-    --     Le u x x :=
-    --   u => x =>
-    --     leSince u x x (zero u) ?leRefl;--(refl u (Nat u) x);
+    -- The non-dependent eliminator
+    Le.proj :
+      (u : Level) ->
+      (v : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (A : Type v) ->
+      ((z : Nat u) -> Eq u (Nat u) y (add u x z) -> A) ->
+        Le u x y -> A :=
+      u => v => x => y => A => h =>
+        Sigma.elim u u v (Nat u) (z => Eq u (Nat u) y (add u x z)) (_ => A) h;
 
     -- 0 ≤ x
     zeroLe :
@@ -827,6 +1287,30 @@
       u => x =>
         leSince u (zero u) x x (zeroAdd u x);
 
+    -- x ≤ x
+    leRefl :
+      (u : Level) ->
+      (x : Nat u) ->
+        Le u x x :=
+      u => x =>
+        leSince u x x (zero u) (addZero u x);
+
+    -- x ≤ y → y ≤ z → x ≤ z
+    leTrans :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Le u x y -> Le u y z -> Le u x z :=
+      u => x => y => z =>
+        Le.proj u u x y (Le u y z -> Le u x z) (x' => h => Eq.elim u u (Nat u) (add u x x') (y => _ => Le u y z -> Le u x z)
+          (Le.proj u u (add u x x') z (Le u x z) (y' => h' => leSince u x z (add u x' y')
+            (trans u (Nat u) z (add u (add u x x') y') (add u x (add u x' y')) h' (addAssoc u x x' y'))
+          ))
+          y
+          (symm u (Nat u) y (add u x x') h)
+        );
+
     -- ¬(succ x ≤ 0)
     succNotLeZero :
       (u : Level) ->
@@ -834,10 +1318,42 @@
         Not u (Le u (succ u x) (zero u)) :=
       u => x =>
         Sigma.proj u u u (Nat u) (y => Eq u (Nat u) (zero u) (add u (succ u x) y)) (Empty u)
-          (y => Eq.elim u u (Nat u) (succ u (add u x y)) (z => _ => Eq u (Nat u) (zero u) z -> Empty u)
-            (zeroNeSucc u (add u x y))
-            (add u (succ u x) y)
-            (succAdd u x y)
+          (y =>
+            Eq.elim u u (Nat u) (succ u (add u x y)) (z => _ => Eq u (Nat u) (zero u) z -> Empty u)
+              (zeroNeSucc u (add u x y))
+              (add u (succ u x) y)
+              (succAdd u x y)
+          );
+
+    -- x ≤ y → succ x ≤ succ y
+    succLeSucc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u x y -> Le u (succ u x) (succ u y) :=
+      u => x => y =>
+        Le.proj u u x y (Le u (succ u x) (succ u y))
+          (z => h =>
+            leSince u (succ u x) (succ u y) z
+              (trans u (Nat u) (succ u y) (succ u (add u x z)) (add u (succ u x) z)
+                (congr u u (Nat u) (Nat u) (succ u) y (add u x z) h)
+                (succAdd u x z)
+              )
+          );
+
+    -- succ x ≤ succ y → x ≤ y
+    leOfSuccLeSucc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u (succ u x) (succ u y) -> Le u x y :=
+      u => x => y =>
+        Le.proj u u (succ u x) (succ u y) (Le u x y)
+          (z => h =>
+            leSince u x y z (succInj u y (add u x z) (trans u (Nat u) (succ u y) (add u (succ u x) z) (succ u (add u x z))
+              h
+              (symm u (Nat u) (succ u (add u x z)) (add u (succ u x) z) (succAdd u x z))
+            ))
           );
 
     -- x ≤ y ↔ succ x ≤ succ y
@@ -847,26 +1363,308 @@
       (y : Nat u) ->
         Iff u (Le u x y) (Le u (succ u x) (succ u y)) :=
       u => x => y =>
-        iffSince u (Le u x y) (Le u (succ u x) (succ u y)) ?leIffSuccLeSucc1 ?leIffSuccLeSucc2;
+        iffSince u (Le u x y) (Le u (succ u x) (succ u y)) (succLeSucc u x y) (leOfSuccLeSucc u x y);
+
+    -- ¬(succ x ≤ x)
+    succNotLe :
+      (u : Level) ->
+      (x : Nat u) ->
+        Not u (Le u (succ u x) x) :=
+      u =>
+        Nat.elim u u (x => Not u (Le u (succ u x) x)) (succNotLeZero u (zero u)) (x => ih => h => ih (leOfSuccLeSucc u (succ u x) x h));
+
+    -- succ x ≤ y → x ≤ y
+    leOfSuccLe :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u (succ u x) y -> Le u x y :=
+      u => x => y =>
+        Le.proj u u (succ u x) y (Le u x y) (z => h => leSince u x y (succ u z)
+          (trans u (Nat u) y (add u (succ u x) z) (succ u (add u x z)) h
+            (symm u (Nat u) (succ u (add u x z)) (add u (succ u x) z) (succAdd u x z))
+          )
+        );
+
+    -- 1 ≤ x → 1 ≤ y → 1 ≤ x * y
+    posMul :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u (one u) x -> Le u (one u) y -> Le u (one u) (mul u x y) :=
+      u =>
+        Nat.elim2 u u (x => y => Le u (one u) x -> Le u (one u) y -> Le u (one u) (mul u x y))
+          (h => _ => absurd u u (Le u (one u) (mul u (zero u) (zero u))) (succNotLe u (zero u) h))
+          (x => _ => _ => h => absurd u u (Le u (one u) (mul u (succ u x) (zero u))) (succNotLe u (zero u) h))
+          (y => _ => h => _ => absurd u u (Le u (one u) (mul u (zero u) (succ u y))) (succNotLe u (zero u) h))
+          (x => y => _ => _ => _ => Eq.elim u u (Nat u) (succ u (add u x (mul u (succ u x) y))) (x => _ => Le u (one u) x)
+            (succLeSucc u (zero u) (add u x (mul u (succ u x) y)) (zeroLe u (add u x (mul u (succ u x) y))))
+            (add u (succ u x) (mul u (succ u x) y))
+            (succAdd u x (mul u (succ u x) y))
+          );
+
+    -- x ≤ y → y ≤ x → x = y
+    leAntisymm :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u x y -> Le u y x -> Eq u (Nat u) x y :=
+      u =>
+        Nat.elim2 u u (x => y => Le u x y -> Le u y x -> Eq u (Nat u) x y)
+          (_ => _ => refl u (Nat u) (zero u))
+          (x => _ => h => _ => absurd u u (Eq u (Nat u) (succ u x) (zero u)) (succNotLeZero u x h))
+          (y => _ => _ => h => absurd u u (Eq u (Nat u) (zero u) (succ u y)) (succNotLeZero u y h))
+          (x => y => ih => h => h' => congr u u (Nat u) (Nat u) (succ u) x y (ih (leOfSuccLeSucc u x y h) (leOfSuccLeSucc u y x h')));
 
     -- ≤ is decidable
-    leDec :
+    decLe :
       (u : Level) ->
         DecRel u (Nat u) (Nat u) (Le u) :=
       u =>
-        Nat.elim u u (x => (y : Nat u) -> Dec u (Le u x y))
-          (x => isTrue u (Le u (zero u) x) (zeroLe u x))
-          (x => ih => Nat.elim u u (y => Dec u (Le u (succ u x) y))
-            (isFalse u (Le u (succ u x) (zero u)) (succNotLeZero u x))
-            (y => _ => decIff u (Le u x y) (Le u (succ u x) (succ u y)) (leIffSuccLeSucc u x y) (ih y))
+        Nat.elim2 u u (x => y => Dec u (Le u x y))
+          (isTrue u (Le u (zero u) (zero u)) (zeroLe u (zero u)))
+          (x => _ => isFalse u (Le u (succ u x) (zero u)) (succNotLeZero u x))
+          (y => _ => isTrue u (Le u (zero u) (succ u y)) (zeroLe u (succ u y)))
+          (x => y => d => decIff u (Le u x y) (Le u (succ u x) (succ u y)) (leIffSuccLeSucc u x y) d);
+
+    -- Less than
+    Lt :
+      (u : Level) ->
+        Nat u -> Nat u -> Type u :=
+      u => x => y =>
+        Le u (succ u x) y;
+
+    -- ¬(x < 0)
+    notLtZero :
+      (u : Level) ->
+      (x : Nat u) ->
+        Not u (Lt u x (zero u)) :=
+      succNotLeZero;
+
+    -- x < succ y → x ≤ y
+    leOfLtSucc :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Lt u x (succ u y) -> Le u x y :=
+      leOfSuccLeSucc;
+
+    -- x < y → x ≤ y
+    leOfLt :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Lt u x y -> Le u x y :=
+      u => x => y =>
+        Le.proj u u (succ u x) y (Le u x y) (z => h => leSince u x y (succ u z)
+          (trans u (Nat u) y (add u (succ u x) z) (succ u (add u x z)) h
+            (symm u (Nat u) (succ u (add u x z)) (add u (succ u x) z) (succAdd u x z))
+          ));
+
+    -- x < y → y ≤ z → x < z
+    ltLeTrans :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Lt u x y -> Le u y z -> Lt u x z :=
+      u => x => y => z =>
+        Le.proj u u (succ u x) y (Le u y z -> Lt u x z)
+          (x' => h => Le.proj u u y z (Lt u x z)
+            (y' => h' => leSince u (succ u x) z (add u x' y')
+              (trans u (Nat u) z (add u y y') (add u (succ u x) (add u x' y')) h'
+                (trans u (Nat u) (add u y y') (add u (add u (succ u x) x') y') (add u (succ u x) (add u x' y'))
+                  (congr u u (Nat u) (Nat u) (y => (add u y y')) y (add u (succ u x) x') h)
+                  (addAssoc u (succ u x) x' y')
+                )
+              )
+            )
           );
 
-  -- Divisibility
-  Dvd :
-    (u : Level) ->
-      Nat u -> Nat u -> Type u :=
-    u => x => y =>
-      Sigma u u (Nat u) (z => Eq u (Nat u) y (mul u x z));
+    -- x ≤ y → x ≠ y → x < y
+    ltOfLeOfNe :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Le u x y -> Not u (Eq u (Nat u) x y) -> Lt u x y :=
+      u => x => y =>
+        Le.proj u u x y (Not u (Eq u (Nat u) x y) -> Lt u x y)
+          (Nat.elim u u (z => Eq u (Nat u) y (add u x z) -> Not u (Eq u (Nat u) x y) -> Lt u x y)
+            (h => h' => absurd u u (Lt u x y) (h' (trans u (Nat u) x (add u x (zero u)) y (addZero u x)
+              (symm u (Nat u) y (add u x (zero u)) h)
+            )))
+            (z => _ => h => _ => Eq.elim u u (Nat u) (add u x (succ u z)) (y => _ => Lt u x y)
+              (leSince u (succ u x) (add u x (succ u z)) z (succAdd u x z))
+              y
+              (symm u (Nat u) y (add u x (succ u z)) h)
+            )
+          );
+
+    -- Strong induction
+    Nat.wfElim :
+      (u : Level) ->
+      (v : Level) ->
+      (P : Nat u -> Type v) ->
+      ((x : Nat u) -> ((y : Nat u) -> Lt u y x -> P y) -> P x) ->
+        (x : Nat u) -> P x :=
+      u => v => P => ih => x =>
+        ih x (Nat.elim u (lMax u v) (x => (y : Nat u) -> Lt u y x -> P y)
+          (y => h => Empty.elim u v (_ => P y) (notLtZero u y h))
+          (x => h => y => h' => ih y (z => h'' => h z (ltLeTrans u z y x h'' (leOfLtSucc u y x h'))))
+          x
+        );
+
+  -----------------
+  -- Divisibility --
+  -----------------
+  
+    -- Divisibility
+    Dvd :
+      (u : Level) ->
+        Nat u -> Nat u -> Type u :=
+      u => x => y =>
+        Sigma u u (Nat u) (z => Eq u (Nat u) y (mul u x z));
+
+    -- Helper for proving divisibility
+    dvdSince :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        (z : Nat u) -> Eq u (Nat u) y (mul u x z) -> Dvd u x y :=
+      u => x => y =>
+        pair u u (Nat u) (z => Eq u (Nat u) y (mul u x z));
+
+    -- The non-dependent eliminator
+    Dvd.proj :
+      (u : Level) ->
+      (v : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (A : Type v) ->
+      ((z : Nat u) -> Eq u (Nat u) y (mul u x z) -> A) ->
+        Dvd u x y -> A :=
+      u => v => x => y => A => h =>
+        Sigma.elim u u v (Nat u) (z => Eq u (Nat u) y (mul u x z)) (_ => A) h;
+
+    -- Everything divides zero
+    dvdZero :
+      (u : Level) ->
+      (x : Nat u) ->
+        Dvd u x (zero u) :=
+      u => x =>
+        dvdSince u x (zero u) (zero u) (mulZero u x);
+
+    -- Reflexivity
+    dvdRefl :
+      (u : Level) ->
+      (x : Nat u) ->
+        Dvd u x x :=
+      u => x =>
+        dvdSince u x x (one u) (mulOne u x);
+
+    -- Transitivity
+    dvdTrans :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+      (z : Nat u) ->
+        Dvd u x y -> Dvd u y z -> Dvd u x z :=
+      u => x => y => z => h => h' =>
+        Dvd.proj u u x y (Dvd u x z) (x' => h'' => Dvd.proj u u y z (Dvd u x z) (y' => h''' =>
+          (dvdSince u x z (mul u x' y')
+            (trans u (Nat u) z (mul u (mul u x x') y') (mul u x (mul u x' y'))
+              (trans u (Nat u) z (mul u y y') (mul u (mul u x x') y') h''' (congr u u (Nat u) (Nat u) (y => mul u y y') y (mul u x x') h''))
+              (mulAssoc u x x' y')
+            )
+          )
+        ) h') h;
+
+    -- x | x * y
+    dvdMulLeft :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Dvd u x (mul u x y) :=
+      u => x => y =>
+        dvdSince u x (mul u x y) y (refl u (Nat u) (mul u x y));
+
+    -- x | x + y → x | y
+    dvdOfDvdAdd :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Dvd u x (add u x y) -> Dvd u x y :=
+      u => x => y =>
+        Dvd.proj u u x (add u x y) (Dvd u x y) (Nat.elim u u (z => Eq u (Nat u) (add u x y) (mul u x z) -> Dvd u x y)
+          (h => Eq.elim u u (Nat u) (zero u) (y => _ => Dvd u x y) (dvdZero u x) y (addZeroRight u x y
+            (trans u (Nat u) (zero u) (mul u x (zero u)) (add u x y) (mulZero u x) (symm u (Nat u) (add u x y) (mul u x (zero u)) h))
+          ))
+          (z => _ => h => dvdSince u x y z (addInjRight u x y (mul u x z) h))
+        );
+
+    -- x | y → x | x + y
+    dvdAdd :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Dvd u x y -> Dvd u x (add u x y) :=
+      u => x => y =>
+        Dvd.proj u u x y (Dvd u x (add u x y)) (z => h => Eq.elim u u (Nat u) (mul u x z) (y => _ => Dvd u x (add u x y))
+          (dvdSince u x (add u x (mul u x z)) (succ u z) (refl u (Nat u) (add u x (mul u x z))))
+          y
+          (symm u (Nat u) y (mul u x z) h)
+        );
+
+    -- x | y ↔ x | x + y
+    dvdIffDvdAdd :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Iff u (Dvd u x y) (Dvd u x (add u x y)) :=
+      u => x => y =>
+        iffSince u (Dvd u x y) (Dvd u x (add u x y)) (dvdAdd u x y) (dvdOfDvdAdd u x y);
+
+    -- Decidability
+    decDvd :
+      (u : Level) ->
+      (x : Nat u) ->
+      (y : Nat u) ->
+        Dec u (Dvd u x y) :=
+      u => x =>
+        Nat.wfElim u u (y => Dec u (Dvd u x y))
+          (z => ih => dif u u (Eq u (Nat u) (zero u) z) (Dec u (Dvd u x z)) (decEq u (zero u) z)
+            (h => isTrue u (Dvd u x z) (Eq.elim u u (Nat u) (zero u) (z => _ => Dvd u x z) (dvdZero u x) z h))
+            (h => dif u u (Eq u (Nat u) (zero u) x) (Dec u (Dvd u x z)) (decEq u (zero u) x)
+              (h' => isFalse u (Dvd u x z) (h'' => h (Dvd.proj u u x z (Eq u (Nat u) (zero u) z)
+                (y => h''' => trans u (Nat u) (zero u) (mul u (zero u) y) z (zeroMul u y)
+                  (trans u (Nat u) (mul u (zero u) y) (mul u x y) z
+                    (congr u u (Nat u) (Nat u) (x => mul u x y) (zero u) x h')
+                    (symm u (Nat u) z (mul u x y) h''')
+                  ))
+                h''
+              )))
+              (h' => dif u u (Le u x z) (Dec u (Dvd u x z)) (decLe u x z)
+                (Le.proj u u x z (Dec u (Dvd u x z)) (y => h'' =>
+                  Eq.elim u u (Nat u) (add u x y) (z => _ => ((y : Nat u) -> Lt u y z -> Dec u (Dvd u x y)) -> Dec u (Dvd u x z))
+                    (ih' => decIff u (Dvd u x y) (Dvd u x (add u x y)) (dvdIffDvdAdd u x y) (ih' y (ltOfLeOfNe u y (add u x y)
+                      (leSince u y (add u x y) x (addComm u x y))
+                      (h''' => h' (addInjLeft u (zero u) x y (trans u (Nat u) (add u (zero u) y) y (add u x y)
+                        (symm u (Nat u) y (add u (zero u) y) (zeroAdd u y))
+                        h''')))
+                    )))
+                    z
+                    (symm u (Nat u) z (add u x y) h'')
+                    ih
+                ))
+                (h'' => isFalse u (Dvd u x z) (Dvd.proj u u x z (Empty u)
+                  (Nat.elim u u (y => Not u (Eq u (Nat u) z (mul u x y)))
+                    (h''' => h (trans u (Nat u) (zero u) (mul u x (zero u)) z (mulZero u x) (symm u (Nat u) z (mul u x (zero u)) h''')))
+                    (y => _ => h''' => h'' (leSince u x z (mul u x y) h'''))
+                  )
+                ))
+              )
+            )
+          );
 
   -- Primality
   Prime :
@@ -875,7 +1673,7 @@
     u => x =>
       Prod u (Le u (two u) x) ((y : Nat u) -> Le u (two u) y -> Dvd u y x -> Eq u (Nat u) x y);
 
-  -- TODO Helper for proving primality
+  -- Helper for proving primality
   primeSince :
     (u : Level) ->
     (x : Nat u) ->
@@ -883,22 +1681,228 @@
     u => x =>
       pair' u (Le u (two u) x) ((y : Nat u) -> Le u (two u) y -> Dvd u y x -> Eq u (Nat u) x y);
 
+  -- The minimal result
+  Found :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+      Type u :=
+    u => P =>
+      Sigma u u (Nat u) (x => Prod u (P x) ((y : Nat u) -> P y -> Le u x y));
+  
+  -- No result
+  NotFound :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+    (x : Nat u) ->
+      Type u :=
+    u => P => x =>
+      (y : Nat u) -> P y -> Lt u x y;
+
+  -- Search result
+  Result :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+    (x : Nat u) ->
+      Type u :=
+    u => P => x =>
+      Sum u (Found u P) (NotFound u P x);
+
+  -- Found
+  found :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+    P y ->
+    ((z : Nat u) -> P z -> Le u y z) ->
+      Result u P x :=
+    u => P => x => y => h => h' =>
+      inl u (Found u P) (NotFound u P x) (pair u u (Nat u) (y => Prod u (P y) ((z : Nat u) -> P z -> Le u y z)) y
+        (pair' u (P y) ((z : Nat u) -> P z -> Le u y z) h h')
+      );
+
+  -- Not found
+  notFound :
+    (u : Level) ->
+    (P : Nat u -> Type u) ->
+    (x : Nat u) ->
+      NotFound u P x -> Result u P x :=
+    u => P => x =>
+      inr u (Found u P) (NotFound u P x);
+
   -- Least number satisfying some condition
   least :
     (u : Level) ->
     (P : Nat u -> Type u) ->
     DecPred u (Nat u) P ->
-    Sigma u u (Nat u) P ->
-      Sigma u u (Nat u) P :=
+    (x : Nat u) ->
+      Result u P x :=
     u => P => d =>
-      ?least;
+      Nat.elim u u (Result u P)
+        (dif u u (P (zero u)) (Result u P (zero u)) (d (zero u))
+          (h => found u P (zero u) (zero u) h (x => _ => zeroLe u x))
+          (h => notFound u P (zero u) (x => h' => ltOfLeOfNe u (zero u) x (zeroLe u x)
+            (h'' => h (Eq.elim u u (Nat u) x (y => _ => P y) h' (zero u) (symm u (Nat u) (zero u) x h'')))
+          ))
+        )
+        (x => Sum.proj u u (Found u P) (NotFound u P x) (Result u P (succ u x)) (inl u (Found u P) (NotFound u P (succ u x)))
+          (h => dif u u (P (succ u x)) (Result u P (succ u x)) (d (succ u x)) (h' => found u P (succ u x) (succ u x) h' h)
+            (h' => notFound u P (succ u x) (y => h'' => ltOfLeOfNe u (succ u x) y (h y h'')
+              (h''' => h' (Eq.elim u u (Nat u) y (z => _ => P z) h'' (succ u x) (symm u (Nat u) (succ u x) y h''')))
+            ))
+          )
+        );
+
+  -- Is a factor ≥ 2
+  IsFac :
+    (u : Level) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+      Type u :=
+    u => x => y =>
+      Prod u (Le u (two u) y) (Dvd u y x);
 
   -- Smallest prime factor of a number
   minFac :
     (u : Level) ->
-      Nat u -> Nat u :=
-    u => x =>
-      ?minFac;
+    (x : Nat u) ->
+    Le u (two u) x ->
+      Found u (IsFac u x) :=
+    u => x => h =>
+      Sum.proj u u (Found u (IsFac u x)) (NotFound u (IsFac u x) x) (Found u (IsFac u x)) (h' => h')
+        (h' => pair u u (Nat u) (y => Prod u (IsFac u x y) ((z : Nat u) -> IsFac u x z -> Le u y z)) x
+          (pair' u (IsFac u x x) ((z : Nat u) -> IsFac u x z -> Le u x z) (pair' u (Le u (two u) x) (Dvd u x x) h (dvdRefl u x))
+            (y => h'' => leOfLt u x y (h' y h''))
+          )
+        )
+        (least u (IsFac u x) (y => decProd u (Le u (two u) y) (Dvd u y x) (decLe u (two u) y) (decDvd u y x)) x);
+
+  -- The product of the list
+  prod :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+      Nat u :=
+    u =>
+      fold u u (Nat u) (Nat u) (one u) (mul u);
+
+  -- The product of nil is 1
+  prodNil :
+    (u : Level) ->
+      Eq u (Nat u) (one u) (prod u (nil u (Nat u))) :=
+    u =>
+      foldNil u u (Nat u) (Nat u) (one u) (mul u);
+
+  -- The product of the non-zero numbers in the list plus one
+  succProd :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+      Nat u :=
+    u => xs =>
+      succ u (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs));
+
+  -- 1 ≤ y → x | y → x ≤ y
+  leOfDvd :
+    (u : Level) ->
+    (x : Nat u) ->
+    (y : Nat u) ->
+      Le u (one u) y -> Dvd u x y -> Le u x y :=
+    u => x => y => h =>
+      Dvd.proj u u x y (Le u x y) (z => h' => Eq.elim u u (Nat u) (mul u x z) (y => _ => Le u (one u) y -> Le u x y)
+        (Nat.elim u u (z => Le u (one u) (mul u x z) -> Le u x (mul u x z))
+          (h'' => absurd u u (Le u x (mul u x (zero u))) (succNotLe u (zero u)
+            (Eq.elim u u (Nat u) (mul u x (zero u)) (x => _ => Le u (one u) x) h'' (zero u)
+              (symm u (Nat u) (zero u) (mul u x (zero u)) (mulZero u x))
+            )
+          ))
+          (z => _ => _ => leSince u x (mul u x (succ u z)) (mul u x z) (refl u (Nat u) (add u x (mul u x z))))
+          z
+        )
+        y
+        (symm u (Nat u) y (mul u x z) h')
+        h
+      );
+
+  -- A number ≥ 2 cannot divide a number and its successor
+  notDivSucc :
+    (u : Level) ->
+    (x : Nat u) ->
+    Le u (two u) x ->
+    (y : Nat u) ->
+      Dvd u x y -> Not u (Dvd u x (succ u y)) :=
+    u => x => h => y =>
+      Dvd.proj u u x y (Not u (Dvd u x (succ u y)))
+        (z => h' => Eq.elim u u (Nat u) (mul u x z) (y => _ => Not u (Dvd u x (succ u y)))
+          (Nat.elim u u (z => Not u (Dvd u x (succ u (mul u x z))))
+            (Eq.elim u u (Nat u) (zero u) (z => _ => Not u (Dvd u x (succ u z)))
+              (h'' => succNotLe u (one u) (leTrans u (two u) x (one u) h (leOfDvd u x (one u) (leRefl u (one u)) h'')))
+              (mul u x (zero u))
+              (mulZero u x)
+            )
+            (y => ih => h'' => ih (dvdOfDvdAdd u x (succ u (mul u x y)) h''))
+            z
+          )
+          y
+          (symm u (Nat u) y (mul u x z) h')
+        );
+
+  -- A member of a list divides the product of the list
+  dvdProd :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+    (x : Nat u) ->
+      Mem u (Nat u) x xs -> Dvd u x (prod u xs) :=
+    u => xs => x =>
+      List.elim u u (Nat u) (xs => Mem u (Nat u) x xs -> Dvd u x (prod u xs))
+        (h => absurd u u (Dvd u x (prod u (nil u (Nat u)))) (memNil u (Nat u) x h))
+        (y => xs => ih => Sum.proj u u (Eq u (Nat u) x y) (Mem u (Nat u) x xs) (Dvd u x (prod u (cons u (Nat u) y xs)))
+          (Eq.elim u u (Nat u) x (y => _ => Dvd u x (mul u y (prod u xs))) (dvdMulLeft u x (prod u xs)) y)
+          (h => Dvd.proj u u x (prod u xs) (Dvd u x (mul u y (prod u xs)))
+            (z => h => Eq.elim u u (Nat u) (mul u x z) (z => _ => Dvd u x (mul u y z))
+              (dvdSince u x (mul u y (mul u x z)) (mul u z y)
+                (trans u (Nat u) (mul u y (mul u x z)) (mul u (mul u x z) y) (mul u x (mul u z y))
+                  (mulComm u y (mul u x z))
+                  (mulAssoc u x z y)
+                )
+              )
+              (prod u xs)
+              (symm u (Nat u) (prod u xs) (mul u x z) h)
+            )
+            (ih h)
+          )
+        )
+        xs;
+
+  -- 2 ≤ succProd xs
+  twoLeSuccProd :
+    (u : Level) ->
+    (xs : List u (Nat u)) ->
+      Le u (two u) (succProd u xs) :=
+    u => xs =>
+      succLeSucc u (one u) (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs))
+        (List.elim u u (Nat u) (xs => Le u (one u) (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs)))
+          (Eq.elim u u (List u (Nat u)) (nil u (Nat u)) (xs => _ => Le u (one u) (prod u xs))
+            (Eq.elim u u (Nat u) (one u) (x => _ => Le u (one u) x) (leRefl u (one u)) (prod u (nil u (Nat u))) (prodNil u))
+            (filter u (Nat u) (Le u (one u)) (decLe u (one u)) (nil u (Nat u)))
+            (filterNil u (Nat u) (Le u (one u)) (decLe u (one u)))
+          )
+          (x => xs => ih => dif u u (Le u (one u) x)
+            (Le u (one u) (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) (cons u (Nat u) x xs))))
+            (decLe u (one u) x)
+            (h => Eq.elim u u (List u (Nat u)) (cons u (Nat u) x (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs))
+              (xs => _ => Le u (one u) (prod u xs))
+              (posMul u x (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs)) h ih)
+              (filter u (Nat u) (Le u (one u)) (decLe u (one u)) (cons u (Nat u) x xs))
+              (filterConsTrue u (Nat u) (Le u (one u)) (decLe u (one u)) x xs h)
+            )
+            (h => Eq.elim u u (List u (Nat u)) (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs)
+              (xs => _ => Le u (one u) (prod u xs))
+              ih
+              (filter u (Nat u) (Le u (one u)) (decLe u (one u)) (cons u (Nat u) x xs))
+              (filterConsFalse u (Nat u) (Le u (one u)) (decLe u (one u)) x xs h)
+            )
+          )
+          xs
+        );
 
   -- There exists a prime not in the list
   generateNewPrime :
@@ -906,7 +1910,29 @@
     (xs : List u (Nat u)) ->
       Sigma u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))) :=
     u => xs =>
-      ?generateNewPrime;
+      Sigma.proj u u u (Nat u) (x => Prod u (IsFac u (succProd u xs) x) ((y : Nat u) -> IsFac u (succProd u xs) y -> Le u x y))
+        (Sigma u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))))
+        (x => Prod.proj u u (IsFac u (succProd u xs) x) ((y : Nat u) -> IsFac u (succProd u xs) y -> Le u x y)
+          (Sigma u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))))
+          (Prod.proj u u (Le u (two u) x) (Dvd u x (succProd u xs))
+            (((y : Nat u) -> IsFac u (succProd u xs) y -> Le u x y) -> Sigma u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))))
+            (h => h' => h'' => pair u u (Nat u) (x => Prod u (Prime u x) (Not u (Mem u (Nat u) x xs))) x
+              (pair' u (Prime u x) (Not u (Mem u (Nat u) x xs))
+                (primeSince u x h (y => h''' => h'''' => (leAntisymm u x y
+                  (h'' y (pair' u (Le u (two u) y) (Dvd u y (succProd u xs)) h''' (dvdTrans u y x (succProd u xs) h'''' h')))
+                  (leOfDvd u y x (leOfSuccLe u (one u) x h) h'''')
+                )))
+                (h''' => notDivSucc u x h (prod u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs))
+                  (dvdProd u (filter u (Nat u) (Le u (one u)) (decLe u (one u)) xs) x
+                    (memFilter u (Nat u) (Le u (one u)) (decLe u (one u)) xs x (leOfSuccLe u (one u) x h) h''')
+                  )
+                  h'
+                )
+              )
+            )
+          )
+        )
+        (minFac u (succProd u xs) (twoLeSuccProd u xs));
 
   -- There is no finite list containing all the primes
   infinitudeOfPrimes :

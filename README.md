@@ -55,6 +55,7 @@ See [funext.txt](funext.txt) for a comprehensive example.
 - Implicit arguments & type classes
 - Pattern matching
 - Inductive type definitions
+- A universe of propositions
 - Nat-indexed type universes
   - This was removed as an experiment to test the viability of requiring all definitions to be universe-polymorphic.
 
