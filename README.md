@@ -31,7 +31,17 @@ id : (u : Level) -> (A : Type u) -> A -> A := _ => _ => x => x;
 Holes
 
 ```hs
-Nat : (u : Level) -> Type u := u => ?TODO;
+addComm : (u : Level) -> (x : Nat u) -> (y : Nat u) -> Eq u (Nat u) (add u x y) (add u y x) :=
+  u => x => y => ?addComm;
+```
+
+```
+>stack exec another-proof-assistant-exe example.txt
+?addComm
+u : Level;
+x : Nat u;
+y : Nat u;
+|- Eq u (Nat u) (add u x y) (add u y x)
 ```
 
 See [funext.txt](funext.txt) for a comprehensive example.
@@ -55,6 +65,7 @@ See [funext.txt](funext.txt) for a comprehensive example.
 - Implicit arguments & type classes
 - Pattern matching
 - Inductive type definitions
+- Proof tactics
 - A universe of propositions
 - Nat-indexed type universes
   - This was removed as an experiment to test the viability of requiring all definitions to be universe-polymorphic.
@@ -67,3 +78,13 @@ See [funext.txt](funext.txt) for a comprehensive example.
 - Quotient effectivity does not hold in the absence of propositional extensionality.
 - Function extensionality holds via quotient types.
 - Classical principles such as global choice and the law of excluded middle do not hold.
+
+## Infinitude of primes
+
+A proof of the infinitude of the primes has been formalized in [infinitude-of-primes.txt](infinitude-of-primes.txt). It serves as a demonstration of the language's capabilities, as well as an example of the difficulties that arise without the features of a modern proof assistant.
+
+For example, the proof spans almost 2000 lines of code. In a fully-featured proof assistant, the same proof would likely be less than a tenth of that size.
+
+## Further details
+
+There is much more that could be said about this project, but I couldn't possibly cover everything here. If you have any questions, please ask me and I'll be happy to answer them.
